@@ -812,68 +812,61 @@ document.getElementById('paragraph-container').appendChild(paragraph);
 
 // Задание 4: единая тема для всей страницы.
 
-(() => {
+(() => {                                   // IIFE: функция, которая запускается сразу; переменные внутри не видны снаружи
 
-  const themeToggle = document.getElementById('theme-toggle');
+  // ===== 1. Поиск элементов и настройки =====
+  const themeToggle = document.getElementById('theme-toggle');   // getElementById: находит элемент по id (кнопку-переключатель)
+  const themeStatus = document.getElementById('theme-status');   // абзац, где пишется, какая тема включена
+  const themeStorageKey = 'six-seven-theme';                     // const: значение не меняется; имя ключа, под которым тема хранится в браузере
 
-  const themeStatus = document.getElementById('theme-status');
-
-  const themeStorageKey = 'six-seven-theme';
-
-  function loadSavedTheme() {
-
-    try {
-
-      return localStorage.getItem(themeStorageKey) === 'light' ? 'light' : 'dark';
-
-    } catch {
-
-      return 'dark';
-
+  // ===== 2. Чтение сохранённой темы =====
+  function loadSavedTheme() {              // function: объявляет функцию
+    try {                                  // try: пробуем выполнить код; если будет ошибка, перейдём в catch
+      return localStorage.getItem(themeStorageKey) === 'light' // localStorage.getItem: читает сохранённое значение (или null, если пусто);
+                                           // ===: строгое сравнение (по значению и типу)
+        ? 'light'                          // «условие ? а : б»: если сохранено 'light', вернуть 'light'
+        : 'dark';                          // иначе (пусто или что-то другое) вернуть 'dark'
+    } catch {                              // catch: сработает, если браузер запретил хранилище (например, приватный режим)
+      return 'dark';                       // return: вернуть результат; по умолчанию тёмная тема
     }
-
   }
 
-  function applyTheme(theme) {
+  // ===== 3. Применение темы =====
+  function applyTheme(theme) {             // theme: параметр, 'dark' или 'light'
+    const darkMode = theme === 'dark';     // сравнение даёт true или false; хранится в darkMode
 
-    const darkMode = theme === 'dark';
+    document.documentElement.dataset.theme = theme;  // documentElement: тег <html>; dataset.theme: ставит атрибут data-theme="..."
+                                                     // CSS видит этот атрибут и подставляет другие цвета
 
-    document.documentElement.dataset.theme = theme;
+    themeToggle.setAttribute('aria-checked', String(darkMode)); // setAttribute: ставит HTML-атрибут; aria-checked: «переключатель включён?»;
+                                                                // String(): true/false → текст "true"/"false"
 
-    themeToggle.setAttribute('aria-checked', String(darkMode));
-
-    themeStatus.textContent = darkMode
-
-      ? 'Сейчас включена тёмная тема.'
-
-      : 'Сейчас включена светлая тема.';
-
+    themeStatus.textContent = darkMode     // textContent: записывает текст в элемент
+      ? 'Сейчас включена тёмная тема.'     // если darkMode = true
+      : 'Сейчас включена светлая тема.';   // иначе
   }
 
+  // ===== 4. Переключение темы =====
   function toggleTheme() {
+    const theme = document.documentElement.dataset.theme === 'dark' // читаем текущую тему из атрибута data-theme
+      ? 'light'                            // была тёмная, станет светлая
+      : 'dark';                            // была светлая, станет тёмная
+    applyTheme(theme);                     // вызов функции: применить новую тему на странице
 
-    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-
-    applyTheme(theme);
-
-    try {
-
-      localStorage.setItem(themeStorageKey, theme);
-
+    try {                                  // пробуем сохранить выбор
+      localStorage.setItem(themeStorageKey, theme); // localStorage.setItem: сохраняет значение в браузере;
+                                           // оно останется после перезагрузки страницы
     } catch {
-
-      // Переключатель работает, даже если браузер запретил хранение данных.
-
+      // Если хранилище запрещено, ничего не делаем: переключатель всё равно работает.
     }
-
   }
 
-  themeToggle.addEventListener('click', toggleTheme);
+  // ===== 5. Запуск =====
+  themeToggle.addEventListener('click', toggleTheme); // addEventListener: «при клике на переключатель вызови toggleTheme»
+  applyTheme(loadSavedTheme());            // сначала loadSavedTheme() достаёт сохранённую тему,
+                                           // затем applyTheme() сразу применяет её при загрузке страницы
 
-  applyTheme(loadSavedTheme());
-
-})();
-
+})();                                      // () в конце: запускает IIFE
 </script>
 
 </body></html>
