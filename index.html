@@ -438,8 +438,8 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   }
 
 
-  
-function applyTheme(theme) {
+
+  function applyTheme(theme) {
     const darkMode = theme === 'dark';
     document.documentElement.dataset.theme = theme;
     themeToggle.setAttribute('aria-checked', String(darkMode));
@@ -460,5 +460,6 @@ function applyTheme(theme) {
 
   themeToggle.addEventListener('click', toggleTheme);
   applyTheme(loadSavedTheme());
+})();
 </script>
 </body></html>
