@@ -333,15 +333,31 @@ body, .exercise-card, .card, .monogram, .fact {
 .recipe-editor input,.recipe-editor textarea{width:100%;padding:12px;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
 .recipe-editor .wide{grid-column:1/-1}.recipe-editor textarea{min-height:75px;resize:vertical}
 .recipe-editor-panel{scroll-margin-top:24px}
-.recipe-dialog{position:fixed;inset:0;margin:auto;width:calc(100% - 32px);max-width:780px;max-height:90vh;overflow:auto;padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text)}
-.recipe-dialog::backdrop{background:rgba(0,0,0,.65)}
-.recipe-dialog-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px}
+.recipe-dialog{position:fixed;inset:0;margin:auto;width:calc(100% - 32px);max-width:780px;max-height:90vh;max-height:90dvh;overflow:auto;overscroll-behavior:contain;padding:28px;border:1px solid var(--line);border-radius:20px;background:var(--surface);color:var(--text);box-shadow:0 24px 90px #0007}
+.recipe-dialog::backdrop{background:rgba(0,0,0,.7);backdrop-filter:blur(5px)}
+.recipe-dialog[open]{animation:appear .18s ease}
+.recipe-dialog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}
 .recipe-dialog-heading h2{margin:0;overflow-wrap:anywhere}
 .recipe-dialog .eyebrow{margin-bottom:8px}
-.recipe-dialog-close{flex-shrink:0;width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:24px}
+.recipe-dialog-close{flex-shrink:0;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--text);font-size:27px;line-height:1}
+.recipe-dialog-close:hover{border-color:var(--lime);color:var(--lime)}
 body.recipe-modal-open{overflow:hidden}
-.recipe-dialog-status{overflow-wrap:anywhere}
+.recipe-item{cursor:pointer;transition:border-color .2s}
+.recipe-item:hover{border-color:var(--lime)}
+.recipe-open{padding:0;border:0;background:none;color:var(--text);text-align:left;font:inherit;font-weight:700;overflow-wrap:anywhere}
+.recipe-open:hover{color:var(--lime)}
+.recipe-info .recipe-open-hint{color:var(--lime);font-size:13px;margin-top:12px}
+.recipe-dialog-status{margin:12px 0;color:var(--text);overflow-wrap:anywhere}
 .recipe-dialog-status:empty{display:none}
+.recipe-details-meta{color:var(--muted);margin:0 0 18px}
+.recipe-details-image{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-bottom:24px;background:var(--bg)}
+.recipe-details-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:30px}
+.recipe-details-grid h3{font-size:19px;margin:0 0 14px}
+.recipe-details-grid ul,.recipe-details-grid ol{padding-left:23px;margin:0;color:var(--secondary)}
+.recipe-details-grid li{padding-left:4px;margin-bottom:12px;overflow-wrap:anywhere;white-space:pre-line}
+.recipe-details-grid li::marker{color:var(--lime);font-weight:700}
+.recipe-details-footer{display:flex;justify-content:flex-end;border-top:1px solid var(--line);margin-top:24px;padding-top:18px}
+@media(max-width:600px){.recipe-dialog{width:calc(100% - 20px);max-height:94vh;max-height:94dvh;padding:20px 16px;border-radius:16px}.recipe-details-grid{grid-template-columns:1fr;gap:22px}.recipe-dialog-heading{gap:12px}.recipe-dialog-heading h2{font-size:22px}.recipe-details-image{max-height:240px}}
 .recipe-editor-panel fieldset{border:0;padding:0;margin:0;min-width:0}
 .recipe-photo{grid-column:1/-1;border:1px dashed var(--demo-border);border-radius:12px;padding:18px;min-width:0}
 .recipe-photo legend{padding:0 8px;font-weight:700;color:var(--text)}
@@ -544,6 +560,11 @@ body.recipe-modal-open{overflow:hidden}
       <div class="recipe-toolbar"><button class="action" id="recipe-submit" type="submit">POST · Добавить</button><button type="button" class="recipe-secondary" id="recipe-cancel">Отмена</button></div>
       </fieldset>
     </form>
+  </dialog>
+  <dialog class="recipe-dialog" id="recipe-details" aria-labelledby="recipe-details-title">
+    <div class="recipe-dialog-heading"><div><p class="eyebrow">Рецепт блюда</p><h2 id="recipe-details-title" tabindex="-1" autofocus></h2></div><button type="button" class="recipe-dialog-close" id="recipe-details-close" aria-label="Закрыть рецепт">×</button></div>
+    <div id="recipe-details-content"></div>
+    <div class="recipe-details-footer"><button type="button" class="action" id="recipe-details-done">Закрыть</button></div>
   </dialog>
   <div class="recipe-list" id="recipe-list" aria-live="polite"></div>
 </section>
@@ -956,6 +977,9 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   const ingredientsInput = document.getElementById('recipe-ingredients');
   const instructionsInput = document.getElementById('recipe-instructions');
   const editor = document.getElementById('recipe-editor-panel');
+  const details = document.getElementById('recipe-details');
+  const detailsTitle = document.getElementById('recipe-details-title');
+  const detailsContent = document.getElementById('recipe-details-content');
   const formStatus = document.getElementById('recipe-form-status');
   const addButton = document.getElementById('recipe-add');
   const submitButton = document.getElementById('recipe-submit');
@@ -976,6 +1000,7 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   let saving = false;
   let urlTimer;
   let editorOpener;
+  let detailsOpener;
 
   function photoStatus(message, error = false) {
     photoMessage.textContent = message;
@@ -1078,7 +1103,7 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   }
   // showModal() затемняет фон и удерживает фокус внутри окна.
   function syncModalScroll() {
-    document.body.classList.toggle('recipe-modal-open', editor.open);
+    document.body.classList.toggle('recipe-modal-open', editor.open || details.open);
   }
   function restoreEditorFocus() {
     const target = editorOpener && editorOpener.isConnected ? editorOpener : addButton;
@@ -1099,6 +1124,53 @@ document.getElementById('paragraph-container').appendChild(paragraph);
     syncModalScroll();
     if (!saving) restoreEditorFocus();
   }
+  function closeDetails() {
+    if (details.open) details.close();
+    syncModalScroll();
+    const target = detailsOpener && detailsOpener.isConnected ? detailsOpener : addButton;
+    target.focus({preventScroll:true});
+  }
+  function openDetails(id, opener) {
+    if (saving) return;
+    const recipe = recipes.find(item => item.id === id);
+    if (!recipe) return;
+    detailsOpener = opener;
+    detailsTitle.textContent = recipe.name || 'Без названия';
+    detailsContent.replaceChildren();
+    const prep = Number(recipe.prepTimeMinutes) || 0;
+    const cook = Number(recipe.cookTimeMinutes) || 0;
+    const meta = ['ID: ' + recipe.id, 'Время: ' + (prep + cook) + ' мин.'];
+    if (recipe.cuisine) meta.push('Кухня: ' + recipe.cuisine);
+    if (recipe.servings) meta.push('Порций: ' + recipe.servings);
+    detailsContent.append(element('p', meta.join(' · '), 'recipe-details-meta'));
+    if (recipe.image) {
+      const img = element('img', undefined, 'recipe-details-image');
+      img.alt = recipe.name || 'Фото блюда';
+      img.addEventListener('error', () => {
+        img.replaceWith(element('p', 'Фото недоступно', 'recipe-image-fallback'));
+      }, {once:true});
+      img.src = recipe.image;
+      detailsContent.append(img);
+    }
+    const grid = element('div', undefined, 'recipe-details-grid');
+    const ingredients = element('section');
+    ingredients.append(element('h3', 'Ингредиенты'));
+    const ingredientsList = element('ul');
+    for (const item of recipe.ingredients || []) ingredientsList.append(element('li', item));
+    ingredients.append(ingredientsList.children.length ? ingredientsList : element('p', 'Ингредиенты не указаны.'));
+    const instructions = element('section');
+    instructions.append(element('h3', 'Как приготовить'));
+    const steps = element('ol');
+    for (const step of recipe.instructions || []) steps.append(element('li', step));
+    instructions.append(steps.children.length ? steps : element('p', 'Шаги приготовления не указаны.'));
+    grid.append(ingredients, instructions);
+    detailsContent.append(grid);
+    if (!details.open) details.showModal();
+    details.scrollTop = 0;
+    syncModalScroll();
+    detailsTitle.focus({preventScroll:true});
+  }
+
   function setStatus(message) {
     status.textContent = message;
     if (editor.open) formStatus.textContent = message;
@@ -1133,10 +1205,23 @@ document.getElementById('paragraph-container').appendChild(paragraph);
         card.append(img);
       }
       const info = element('div', undefined, 'recipe-info');
-      info.append(element('h3', recipe.name || 'Без названия'));
+      const heading = element('h3');
+      const open = element('button', recipe.name || 'Без названия', 'recipe-open');
+      open.type = 'button';
+      open.setAttribute('aria-haspopup', 'dialog');
+      open.setAttribute('aria-controls', 'recipe-details');
+      open.setAttribute('aria-label', 'Открыть рецепт: ' + (recipe.name || 'Без названия'));
+      open.addEventListener('click', () => openDetails(recipe.id, open));
+      heading.append(open);
+      info.append(heading);
       const totalTime = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
       info.append(element('p', 'ID: ' + recipe.id + ' · ' + totalTime + ' мин.'));
       info.append(element('p', 'Ингредиенты: ' + (recipe.ingredients || []).join(', ')));
+      info.append(element('p', 'Нажмите, чтобы посмотреть приготовление →', 'recipe-open-hint'));
+      // Кнопки изменения и удаления выполняют только своё действие.
+      card.addEventListener('click', event => {
+        if (!event.target.closest('button')) openDetails(recipe.id, open);
+      });
       const actions = element('div', undefined, 'recipe-buttons');
       const edit = element('button', 'PUT · Изменить'); edit.type = 'button';
       edit.addEventListener('click', () => startEdit(recipe.id, edit));
@@ -1242,9 +1327,15 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   });
   document.getElementById('recipe-cancel').addEventListener('click', closeEditor);
   document.getElementById('recipe-editor-close').addEventListener('click', closeEditor);
+  document.getElementById('recipe-details-close').addEventListener('click', closeDetails);
+  document.getElementById('recipe-details-done').addEventListener('click', closeDetails);
   editor.addEventListener('cancel', event => {
     event.preventDefault();
     if (!saving) closeEditor();
+  });
+  details.addEventListener('cancel', event => {
+    event.preventDefault();
+    closeDetails();
   });
   function closeOnBackdrop(dialog, close) {
     let startedOutside = false;
@@ -1260,9 +1351,11 @@ document.getElementById('paragraph-container').appendChild(paragraph);
     dialog.addEventListener('close', syncModalScroll);
   }
   closeOnBackdrop(editor, closeEditor);
+  closeOnBackdrop(details, closeDetails);
   window.addEventListener('hashchange', () => {
     if (document.getElementById('panel-task5').hidden) {
       if (editor.open && !saving) closeEditor();
+      if (details.open) closeDetails();
     }
   });
   render();
