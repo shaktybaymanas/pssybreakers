@@ -342,14 +342,6 @@ body, .exercise-card, .card, .monogram, .fact {
 body.recipe-modal-open{overflow:hidden}
 .recipe-dialog-status{overflow-wrap:anywhere}
 .recipe-dialog-status:empty{display:none}
-.recipe-item{cursor:pointer}
-.recipe-open{padding:0;border:0;background:none;color:var(--text);text-align:left;font:inherit;font-weight:700;overflow-wrap:anywhere}
-.recipe-info .recipe-open-hint{color:var(--lime);font-size:13px}
-.recipe-details-meta{color:var(--muted)}
-.recipe-details-image{display:block;width:100%;max-height:280px;object-fit:cover;margin-bottom:20px}
-.recipe-details-grid section+section{margin-top:24px}
-.recipe-details-grid li{margin-bottom:8px;overflow-wrap:anywhere;white-space:pre-line}
-.recipe-details-footer{margin-top:20px}
 .recipe-editor-panel fieldset{border:0;padding:0;margin:0;min-width:0}
 .recipe-photo{grid-column:1/-1;border:1px dashed var(--demo-border);border-radius:12px;padding:18px;min-width:0}
 .recipe-photo legend{padding:0 8px;font-weight:700;color:var(--text)}
@@ -552,11 +544,6 @@ body.recipe-modal-open{overflow:hidden}
       <div class="recipe-toolbar"><button class="action" id="recipe-submit" type="submit">POST · Добавить</button><button type="button" class="recipe-secondary" id="recipe-cancel">Отмена</button></div>
       </fieldset>
     </form>
-  </dialog>
-  <dialog class="recipe-dialog" id="recipe-details" aria-labelledby="recipe-details-title">
-    <div class="recipe-dialog-heading"><div><p class="eyebrow">Рецепт блюда</p><h2 id="recipe-details-title" tabindex="-1" autofocus></h2></div><button type="button" class="recipe-dialog-close" id="recipe-details-close" aria-label="Закрыть рецепт">×</button></div>
-    <div id="recipe-details-content"></div>
-    <div class="recipe-details-footer"><button type="button" class="action" id="recipe-details-done">Закрыть</button></div>
   </dialog>
   <div class="recipe-list" id="recipe-list" aria-live="polite"></div>
 </section>
@@ -969,9 +956,6 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   const ingredientsInput = document.getElementById('recipe-ingredients');
   const instructionsInput = document.getElementById('recipe-instructions');
   const editor = document.getElementById('recipe-editor-panel');
-  const details = document.getElementById('recipe-details');
-  const detailsTitle = document.getElementById('recipe-details-title');
-  const detailsContent = document.getElementById('recipe-details-content');
   const formStatus = document.getElementById('recipe-form-status');
   const addButton = document.getElementById('recipe-add');
   const submitButton = document.getElementById('recipe-submit');
@@ -992,7 +976,6 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   let saving = false;
   let urlTimer;
   let editorOpener;
-  let detailsOpener;
 
   function photoStatus(message, error = false) {
     photoMessage.textContent = message;
@@ -1095,7 +1078,7 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   }
   // showModal() затемняет фон и удерживает фокус внутри окна.
   function syncModalScroll() {
-    document.body.classList.toggle('recipe-modal-open', editor.open || details.open);
+    document.body.classList.toggle('recipe-modal-open', editor.open);
   }
   function restoreEditorFocus() {
     const target = editorOpener && editorOpener.isConnected ? editorOpener : addButton;
@@ -1116,53 +1099,6 @@ document.getElementById('paragraph-container').appendChild(paragraph);
     syncModalScroll();
     if (!saving) restoreEditorFocus();
   }
-  function closeDetails() {
-    if (details.open) details.close();
-    syncModalScroll();
-    const target = detailsOpener && detailsOpener.isConnected ? detailsOpener : addButton;
-    target.focus({preventScroll:true});
-  }
-  function openDetails(id, opener) {
-    if (saving) return;
-    const recipe = recipes.find(item => item.id === id);
-    if (!recipe) return;
-    detailsOpener = opener;
-    detailsTitle.textContent = recipe.name || 'Без названия';
-    detailsContent.replaceChildren();
-    const prep = Number(recipe.prepTimeMinutes) || 0;
-    const cook = Number(recipe.cookTimeMinutes) || 0;
-    const meta = ['ID: ' + recipe.id, 'Время: ' + (prep + cook) + ' мин.'];
-    if (recipe.cuisine) meta.push('Кухня: ' + recipe.cuisine);
-    if (recipe.servings) meta.push('Порций: ' + recipe.servings);
-    detailsContent.append(element('p', meta.join(' · '), 'recipe-details-meta'));
-    if (recipe.image) {
-      const img = element('img', undefined, 'recipe-details-image');
-      img.alt = recipe.name || 'Фото блюда';
-      img.addEventListener('error', () => {
-        img.replaceWith(element('p', 'Фото недоступно', 'recipe-image-fallback'));
-      }, {once:true});
-      img.src = recipe.image;
-      detailsContent.append(img);
-    }
-    const grid = element('div', undefined, 'recipe-details-grid');
-    const ingredients = element('section');
-    ingredients.append(element('h3', 'Ингредиенты'));
-    const ingredientsList = element('ul');
-    for (const item of recipe.ingredients || []) ingredientsList.append(element('li', item));
-    ingredients.append(ingredientsList.children.length ? ingredientsList : element('p', 'Ингредиенты не указаны.'));
-    const instructions = element('section');
-    instructions.append(element('h3', 'Как приготовить'));
-    const steps = element('ol');
-    for (const step of recipe.instructions || []) steps.append(element('li', step));
-    instructions.append(steps.children.length ? steps : element('p', 'Шаги приготовления не указаны.'));
-    grid.append(ingredients, instructions);
-    detailsContent.append(grid);
-    if (!details.open) details.showModal();
-    details.scrollTop = 0;
-    syncModalScroll();
-    detailsTitle.focus({preventScroll:true});
-  }
-
   function setStatus(message) {
     status.textContent = message;
     if (editor.open) formStatus.textContent = message;
@@ -1197,23 +1133,10 @@ document.getElementById('paragraph-container').appendChild(paragraph);
         card.append(img);
       }
       const info = element('div', undefined, 'recipe-info');
-      const heading = element('h3');
-      const open = element('button', recipe.name || 'Без названия', 'recipe-open');
-      open.type = 'button';
-      open.setAttribute('aria-haspopup', 'dialog');
-      open.setAttribute('aria-controls', 'recipe-details');
-      open.setAttribute('aria-label', 'Открыть рецепт: ' + (recipe.name || 'Без названия'));
-      open.addEventListener('click', () => openDetails(recipe.id, open));
-      heading.append(open);
-      info.append(heading);
+      info.append(element('h3', recipe.name || 'Без названия'));
       const totalTime = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
       info.append(element('p', 'ID: ' + recipe.id + ' · ' + totalTime + ' мин.'));
       info.append(element('p', 'Ингредиенты: ' + (recipe.ingredients || []).join(', ')));
-      info.append(element('p', 'Нажмите, чтобы посмотреть приготовление →', 'recipe-open-hint'));
-      // Кнопки изменения и удаления выполняют только своё действие.
-      card.addEventListener('click', event => {
-        if (!event.target.closest('button')) openDetails(recipe.id, open);
-      });
       const actions = element('div', undefined, 'recipe-buttons');
       const edit = element('button', 'PUT · Изменить'); edit.type = 'button';
       edit.addEventListener('click', () => startEdit(recipe.id, edit));
@@ -1319,15 +1242,9 @@ document.getElementById('paragraph-container').appendChild(paragraph);
   });
   document.getElementById('recipe-cancel').addEventListener('click', closeEditor);
   document.getElementById('recipe-editor-close').addEventListener('click', closeEditor);
-  document.getElementById('recipe-details-close').addEventListener('click', closeDetails);
-  document.getElementById('recipe-details-done').addEventListener('click', closeDetails);
   editor.addEventListener('cancel', event => {
     event.preventDefault();
     if (!saving) closeEditor();
-  });
-  details.addEventListener('cancel', event => {
-    event.preventDefault();
-    closeDetails();
   });
   function closeOnBackdrop(dialog, close) {
     let startedOutside = false;
@@ -1343,11 +1260,9 @@ document.getElementById('paragraph-container').appendChild(paragraph);
     dialog.addEventListener('close', syncModalScroll);
   }
   closeOnBackdrop(editor, closeEditor);
-  closeOnBackdrop(details, closeDetails);
   window.addEventListener('hashchange', () => {
     if (document.getElementById('panel-task5').hidden) {
       if (editor.open && !saving) closeEditor();
-      if (details.open) closeDetails();
     }
   });
   render();
