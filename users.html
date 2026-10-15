@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Каталог людей Pussybreakers: профили, поиск и управление пользователями DummyJSON.">
+  <title>Люди — pussybreakers</title>
+  <link rel="stylesheet" href="users/styles.css?v=20261016-buttons2">
+  <link rel="stylesheet" href="recipes/cart.css?v=20261016-buttons2">
+  <link rel="stylesheet" href="ui/common.css?v=20261016-buttons2">
+  <script src="ui/boot.js?v=20261016-buttons2" data-entry="users/app.js" data-status="page-status" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Перейти к каталогу</a>
+  <header class="site-header wrap">
+    <div class="topline"><a class="brand" href="index.html"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span class="brand-dot">.</span></a><span class="edition">УЧЕБНЫЙ ПРОЕКТ / 2026</span></div>
+    <nav class="site-nav" aria-label="Разделы сайта"><a href="index.html">Команда и задания</a><a href="index.html#task5">Рецепты</a><a href="users.html" aria-current="page">Люди <span>06</span></a></nav>
+  </header>
+  <main id="main" class="wrap">
+    <section class="intro" aria-labelledby="page-title"><div><p class="eyebrow">Задание 06 / DummyJSON Users</p><h1 id="page-title">За каждым ником —<br><span>человек.</span></h1></div><div class="intro-side"><p>Знакомьтесь, находите и управляйте.<br>Все профили в одном месте.</p><button class="button primary" id="add-user" disabled aria-haspopup="dialog" aria-controls="create-dialog"><span aria-hidden="true">＋</span> Добавить человека</button></div></section>
+    <section aria-label="Каталог людей">
+      <div class="toolbar"><div class="search-field"><label for="user-search">Поиск по имени или нику</label><div class="input-with-icon"><span aria-hidden="true">⌕</span><input id="user-search" type="search" placeholder="Например, Emily или @emilys" autocomplete="off"></div></div><div class="control-field"><label for="role-filter">Роль</label><select id="role-filter"><option value="all">Все роли</option><option value="user">Пользователь</option><option value="moderator">Модератор</option><option value="admin">Админ</option></select></div><div class="control-field"><label for="name-sort">Сортировка по имени</label><select id="name-sort"><option value="asc">А → Я / A → Z</option><option value="desc">Я → А / Z → A</option></select></div></div>
+      <div class="list-heading"><p id="user-count" role="status">Загружаем каталог…</p><span class="api-status" id="api-status" aria-live="polite">GET /users</span></div>
+      <div class="status-row"><p id="page-status" class="status" role="status" aria-live="polite">Подключаемся к DummyJSON…</p><button id="retry-load" class="button secondary" hidden>Повторить загрузку</button></div>
+      <div id="user-list" class="user-list" aria-busy="true"></div>
+      <div id="empty-state" class="empty-state" hidden><span class="empty-symbol" aria-hidden="true">⌕</span><h2 id="empty-title">Никого не нашли</h2><p id="empty-text">Попробуйте другое имя или выберите все роли.</p><button id="reset-filters" class="button secondary">Сбросить поиск и фильтр</button></div>
+      <p class="catalog-note">Учебные данные. Добавления, изменения и удаления действуют до перезагрузки страницы. Роль обозначает права пользователя, а не онлайн-статус.</p>
+    </section>
+    <noscript><p class="status" data-error="true">Для каталога нужно включить JavaScript.</p></noscript>
+  </main>
+  <footer class="wrap"><span>pussybreakers / Люди</span><a href="https://dummyjson.com/docs/users" target="_blank" rel="noreferrer">Данные DummyJSON ↗</a></footer>
+  <dialog id="profile-dialog" class="dialog profile-dialog" aria-labelledby="profile-title"><button class="close-button" type="button" data-close aria-label="Закрыть профиль">×</button><div id="profile-container"></div></dialog>
+  <dialog id="create-dialog" class="dialog form-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">Новый профиль</p><h2 id="create-title">Добавить человека</h2></div><button class="close-button" type="button" data-close aria-label="Закрыть форму добавления">×</button></div><div id="create-container"></div></dialog>
+  <dialog id="edit-dialog" class="dialog form-dialog" aria-labelledby="edit-title"><div class="dialog-heading"><div><p class="eyebrow">Настройки профиля</p><h2 id="edit-title">Редактировать человека</h2></div><button class="close-button" type="button" data-close aria-label="Закрыть форму редактирования">×</button></div><div id="edit-container"></div></dialog>
+</body>
+</html>
