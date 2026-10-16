@@ -1,18 +1,20 @@
 {
-  "number": 2,
-  "suggestedPerson": "Манас",
-  "title": "Профиль автора и оформление",
+  "number": 3,
+  "suggestedPerson": "Алишер",
+  "title": "Подключение к странице рецептов",
   "remote": "https://github.com/shaktybaymanas/pssybreakers.git",
   "branch": "main",
   "baseCommit": "385cf32732fcc1a8210e33c5e3d137c669b7e2f3",
-  "expectedBeforeTree": "18a0710264accff1b6fb7a782eab7ebf40fa1d7c",
-  "expectedAfterTree": "99772e4f1d02662798b62dbce203d7d172317b19",
-  "patchSha256": "21503be16f507fcd1c629ff088fce17a0d5d014f15cc6eae66a52d5ff6772e7a",
-  "commitMessage": "Добавлен профиль автора со списком его блюд",
+  "expectedBeforeTree": "99772e4f1d02662798b62dbce203d7d172317b19",
+  "expectedAfterTree": "648f551098392e3513d2707832f802991a92c800",
+  "patchSha256": "12fcfd96f52a83744a584261d0e9c531b290a7801e4b1b4176110c4099adfe01",
+  "commitMessage": "Подключены фильтры и авторы к каталогу рецептов",
   "changedPaths": [
-    "recipes/authors.js",
-    "recipes/catalog.css",
-    "users/api.js"
+    "index.html",
+    "recipes/app.js",
+    "recipes/reviews.js",
+    "recipes/reviews.css",
+    "ui/boot.js"
   ],
   "deletedPaths": []
 }

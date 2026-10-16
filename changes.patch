@@ -1,225 +1,263 @@
-diff --git a/recipes/authors.js b/recipes/authors.js
-new file mode 100644
-index 0000000000000000000000000000000000000000..9b0914b9712702c9e5ec417a63549e86685d4146
---- /dev/null
-+++ b/recipes/authors.js
-@@ -0,0 +1,134 @@
-+import { getUsers } from '../users/api.js?v=20261016-sorting1';
-+import { fullName, httpUrl, roleLabels } from '../users/model.js?v=20261016-sorting1';
-+import { createRecipeFilters, selectRecipes, difficultyLabels, categoryLabels, recipeRating } from './filters.js?v=20261016-sorting1';
-+
-+let authorsPromise;
-+export function loadAuthors() {
-+  if (!authorsPromise) authorsPromise = getUsers().catch(error => { authorsPromise = null; throw error; });
-+  return authorsPromise;
-+}
-+export function element(tag, className, text) {
-+  const node = document.createElement(tag);
-+  if (className) node.className = className;
-+  if (text !== undefined) node.textContent = text;
-+  return node;
-+}
-+export function userCard(user) {
-+  const card = element('span', 'author-card');
-+  const avatar = element('span', 'author-avatar', ((user.firstName || '')[0] || '?') + ((user.lastName || '')[0] || ''));
-+  avatar.setAttribute('aria-hidden', 'true');
-+  if (httpUrl(user.image)) {
-+    const image = element('img'); image.alt = ''; image.loading = 'lazy';
-+    image.addEventListener('error', () => image.remove(), { once: true }); image.src = user.image; avatar.append(image);
-+  }
-+  const info = element('span', 'author-info');
-+  info.append(element('span', 'author-name', fullName(user)));
-+  if (user.username) info.append(element('span', 'author-handle', '@' + user.username));
-+  card.append(avatar, info); return card;
-+}
-+
-+export function createAuthorProfiles({ getRecipes, openRecipe }) {
-+  let dialog, content, opener, restoreFocus = true;
-+  function ensureDialog() {
-+    if (dialog) return;
-+    dialog = element('dialog', 'recipe-dialog recipe-author-dialog');
-+    dialog.id = 'recipe-author-dialog'; dialog.setAttribute('aria-labelledby', 'author-profile-title');
-+    const close = element('button', 'recipe-dialog-close author-close', '×'); close.type = 'button';
-+    close.setAttribute('aria-label', 'Закрыть профиль автора'); close.addEventListener('click', () => dialog.close());
-+    content = element('div');
-+    const footer = element('div', 'author-footer');
-+    const back = element('button', 'recipe-secondary', '← Вернуться к рецепту'); back.type = 'button';
-+    back.addEventListener('click', () => dialog.close()); footer.append(back);
-+    dialog.append(close, content, footer); document.body.append(dialog);
-+    dialog.addEventListener('close', () => {
-+      document.body.classList.toggle('recipe-modal-open', !!document.querySelector('.recipe-dialog[open]'));
-+      if (restoreFocus && opener?.isConnected) opener.focus({ preventScroll: true });
-+      restoreFocus = true;
-+    });
-+    document.getElementById('recipe-details').addEventListener('close', () => { if (dialog.open) dialog.close(); });
-+    window.addEventListener('hashchange', () => { if (dialog.open) dialog.close(); });
-+  }
-+  function open(user, source) {
-+    ensureDialog(); opener = source;
-+    content.replaceChildren();
-+    const layout = element('div', 'author-profile-layout');
-+    const data = element('section', 'author-profile-data'); data.setAttribute('aria-label', 'Информация о пользователе');
-+    const title = element('h2', '', fullName(user)); title.id = 'author-profile-title'; title.tabIndex = -1;
-+    data.append(element('p', 'eyebrow', 'Профиль автора'), title, userCard(user));
-+    const fields = element('dl', 'author-profile-fields');
-+    for (const [label, value] of [
-+      ['ID', user.id === 0 ? 'Локальный профиль' : user.id],
-+      ['Имя', fullName(user)], ['Ник', user.username ? '@' + user.username : 'Не указан'],
-+      ['Роль', user.id === 0 ? 'Автор на этой странице' : roleLabels[user.role] || 'Не указана'],
-+      ['Почта', user.email || 'Не указана'], ['Телефон', user.phone || 'Не указан']
-+    ]) {
-+      const row = element('div', 'author-profile-field');
-+      row.append(element('dt', '', label), element('dd', '', String(value))); fields.append(row);
-+    }
-+    data.append(fields);
-+    if (user.description) data.append(element('p', 'author-description', user.description));
-+    const section = element('section', 'author-recipes');
-+    const heading = element('h3', '', 'Рецепты автора');
-+    const filtersBox = element('div');
-+    const count = element('p', 'recipe-results'); count.setAttribute('role', 'status');
-+    const list = element('div', 'author-recipe-list');
-+    section.setAttribute('aria-label', 'Блюда и категории автора');
-+    section.append(element('p', 'eyebrow', 'Блюда автора'), heading, filtersBox, count, list);
-+    layout.append(section, data); content.append(layout);
-+    const recipes = selectRecipes(getRecipes(), {}, user.id);
-+    const filters = createRecipeFilters(filtersBox, 'author', render, { categories: true });
-+    filters.update(recipes);
-+    function render() {
-+      const visible = selectRecipes(recipes, filters.values());
-+      count.textContent = 'Показано: ' + visible.length + ' из ' + recipes.length;
-+      list.replaceChildren();
-+      if (!visible.length) {
-+        list.append(element('p', 'recipe-empty', recipes.length ? 'Ничего не найдено. Измените фильтр или нажмите «Сбросить».' : 'В каталоге пока нет рецептов этого автора.'));
-+      }
-+      for (const recipe of visible) {
-+        const button = element('button', 'author-recipe'); button.type = 'button';
-+        button.setAttribute('aria-label', 'Открыть рецепт: ' + recipe.name);
-+        if (recipe.image) {
-+          const image = element('img'); image.src = recipe.image; image.alt = ''; image.loading = 'lazy';
-+          image.addEventListener('error', () => image.remove(), { once: true }); button.append(image);
-+        }
-+        const info = element('span', 'author-recipe-info');
-+        info.append(element('strong', '', recipe.name));
-+        const time = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
-+        const rating = recipeRating(recipe);
-+        info.append(element('span', '', [recipe.cuisine, difficultyLabels[recipe.difficulty] || recipe.difficulty, time + ' мин.', rating === null ? '' : '★ ' + rating].filter(Boolean).join(' · ')));
-+        if (recipe.mealType?.length) info.append(element('span', 'author-recipe-category', recipe.mealType.map(value => categoryLabels[value] || value).join(' · ')));
-+        button.append(info, element('span', 'author-recipe-arrow', '↗'));
-+        button.addEventListener('click', () => { restoreFocus = false; dialog.close(); openRecipe(recipe.id); });
-+        list.append(button);
-+      }
-+    }
-+    render();
-+    if (!dialog.open) dialog.showModal();
-+    document.body.classList.add('recipe-modal-open'); dialog.scrollTop = 0; title.focus({ preventScroll: true });
-+  }
-+  async function mount(container, recipe) {
-+    if (recipe.userId == null) { container.replaceChildren(element('p', 'reviews-note', 'Автор рецепта не указан.')); return; }
-+    container.replaceChildren(element('p', 'reviews-note', 'Загружаем автора рецепта…'));
-+    try {
-+      const user = Number(recipe.userId) === 0
-+        ? { id: 0, firstName: 'Вы', lastName: '', username: '', description: 'Рецепты, добавленные вами на этой странице.' }
-+        : (await loadAuthors()).find(item => item.id === Number(recipe.userId));
-+      if (!container.isConnected) return;
-+      if (!user) throw new Error('Автор рецепта не найден.');
-+      const button = element('button', 'recipe-owner'); button.type = 'button';
-+      button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'recipe-author-dialog');
-+      button.setAttribute('aria-label', 'Открыть профиль автора рецепта: ' + fullName(user));
-+      const info = element('span', 'recipe-owner-info');
-+      info.append(element('span', 'recipe-owner-label', 'Автор рецепта'), userCard(user));
-+      button.append(info, element('span', 'recipe-owner-link', 'Все рецепты автора →'));
-+      button.addEventListener('click', () => open(user, button)); container.replaceChildren(button);
-+    } catch (error) {
-+      if (!container.isConnected) return;
-+      const retry = element('button', 'recipe-secondary', 'Повторить загрузку автора'); retry.type = 'button';
-+      retry.addEventListener('click', () => mount(container, recipe));
-+      container.replaceChildren(element('p', 'reviews-status', error.message), retry);
-+    }
-+  }
-+  return { mount, open };
-+}
-diff --git a/recipes/catalog.css b/recipes/catalog.css
-new file mode 100644
-index 0000000000000000000000000000000000000000..5be8b2b064b71e8b2de8b3b2e6f11bd58a849ced
---- /dev/null
-+++ b/recipes/catalog.css
-@@ -0,0 +1,67 @@
-+.recipe-filters{display:grid;grid-template-columns:minmax(170px,1.5fr) minmax(110px,1fr) minmax(110px,1fr) minmax(190px,1.3fr) auto;gap:14px;align-items:end;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:25px 0 12px}
-+.recipe-filters label{display:grid;gap:7px;font-size:13px;color:var(--secondary);min-width:0}
-+.recipe-filters input,.recipe-filters select{width:100%;min-width:0;padding:12px;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;min-height:44px}
-+.recipe-filters button{min-height:44px}
-+.recipe-results{color:var(--muted);font-size:14px;margin:12px 0}
-+.recipe-empty{grid-column:1/-1;padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
-+.recipe-owner{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;text-align:left;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:0 0 22px}
-+.recipe-owner:hover,.author-recipe:hover{border-color:var(--lime)}
-+.recipe-owner-label{display:block;color:var(--muted);font-size:12px;margin-bottom:9px}
-+.recipe-owner-link{color:var(--lime);font-size:13px}
-+.author-card{display:flex;gap:12px;align-items:center;min-width:0}
-+.author-avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;width:48px;height:48px;border-radius:12px;background:var(--highlight-bg);color:var(--lime);font-size:18px;font-weight:700}
-+.author-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-+.author-info{display:grid;gap:3px;min-width:0}
-+.author-name{font-size:16px;font-weight:700;overflow-wrap:anywhere}
-+.author-handle{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-+.recipe-author-dialog{max-width:1000px;padding:0}
-+.recipe-author-dialog .author-close{position:absolute;right:20px;top:20px}
-+.author-profile-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:stretch;min-height:500px}
-+.author-profile-data{padding:64px 28px 30px;background:var(--bg);border-left:1px solid var(--line);min-width:0}
-+.author-profile-data h2{font-size:28px;margin:0 0 22px;overflow-wrap:anywhere}
-+.author-profile-data .author-card{border:1px solid var(--line);background:var(--surface);padding:18px;border-radius:12px;margin-bottom:20px}
-+.author-profile-data .author-avatar{width:64px;height:64px;font-size:23px}
-+.author-profile-fields{margin:0}
-+.author-profile-field{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
-+.author-profile-field dt{color:var(--muted)}
-+.author-profile-field dd{margin:0;overflow-wrap:anywhere}
-+.author-description{font-size:13px;color:var(--muted);margin:20px 0 0;line-height:1.7;overflow-wrap:anywhere}
-+.author-recipes{padding:32px 28px;min-width:0}
-+.author-recipes h3{margin:0;font-size:25px}
-+.author-recipes .recipe-filters{grid-template-columns:minmax(0,1fr) auto;padding:0;border:0;margin-top:24px}
-+.author-recipes .recipe-filters label:first-child{grid-column:1/-1}
-+.author-recipes .recipe-filters .recipe-filter-category{grid-column:1/-1}
-+.author-recipes .recipe-filters button{grid-column:auto}
-+.author-recipe-list{display:grid;gap:10px;margin-top:18px}
-+.author-recipe{display:flex;align-items:center;gap:14px;width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);text-align:left}
-+.author-recipe img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex:none}
-+.author-recipe-info{display:grid;gap:7px;min-width:0}
-+.author-recipe-info strong{font-size:16px;overflow-wrap:anywhere}
-+.author-recipe-info>span{font-size:12px;color:var(--muted)}
-+.author-recipe-info .author-recipe-category{color:var(--lime)}
-+.author-recipe-arrow{margin-left:auto;color:var(--lime)}
-+.author-footer{display:flex;padding:18px 28px;border-top:1px solid var(--line)}
-+.recipe-filters :is(input,select,button):focus-visible,.recipe-owner:focus-visible,.author-recipe:focus-visible,.recipe-review-author:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
-+@media(max-width:1000px){
-+  .recipe-filters{grid-template-columns:1fr 1fr}.recipe-filters label:first-child{grid-column:1/-1}.recipe-filters button{grid-column:1/-1}
-+  #recipe-filter-controls .recipe-filter-sort{grid-column:1/-1}
-+}
-+@media(max-width:700px){
-+  .recipe-owner{align-items:flex-start;flex-direction:column;padding:16px}
-+  .author-footer{padding:18px 20px}.author-recipe{gap:12px}.author-recipe img{width:62px;height:62px}
-+}
-+@media(min-width:521px) and (max-width:800px){
-+  .author-profile-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-+  .author-recipes{padding:26px 16px}.author-profile-data{padding:60px 16px 26px}
-+  .author-recipes h3,.author-profile-data h2{font-size:22px}
-+  .author-profile-data .author-card{padding:12px;gap:9px}.author-profile-data .author-avatar{width:42px;height:42px;font-size:18px}
-+  .author-profile-data .author-name{font-size:14px}.author-profile-field{grid-template-columns:52px minmax(0,1fr);gap:8px;font-size:12px}
-+  .author-recipes .recipe-filters{gap:10px}.author-recipes .recipe-filters input,.author-recipes .recipe-filters select{padding:10px 8px}
-+  .author-recipes .recipe-filters button{padding:9px 8px;font-size:12px}
-+  .author-recipe{padding:10px;gap:9px}.author-recipe img{width:50px;height:58px}.author-recipe-info strong{font-size:14px}
-+}
-+@media(max-width:520px){
-+  .author-profile-layout{grid-template-columns:1fr}
-+  .author-profile-data{order:-1;border-left:0;border-bottom:1px solid var(--line);padding:60px 20px 26px}
-+  .author-profile-data h2{font-size:26px}.author-recipes{padding:24px 20px}.author-recipes h3{font-size:23px}
-+}
-diff --git a/users/api.js b/users/api.js
-index c4d33f74da8a2cef128072164c1e78667a72d25a..939e2d7e4822e120d0322e61ca1682b573206b6c 100644
---- a/users/api.js
-+++ b/users/api.js
-@@ -1,5 +1,5 @@
--import { editableData, normalizeUser } from './model.js?v=20261016-buttons2';
--export { roleLabels } from './model.js?v=20261016-buttons2';
-+import { editableData, normalizeUser } from './model.js?v=20261016-sorting1';
-+export { roleLabels } from './model.js?v=20261016-sorting1';
- const baseUrl = 'https://dummyjson.com';
- export const timeoutMs = 15000;
+diff --git a/index.html b/index.html
+index fb47edbc747cded63280f29f2ccb2a6b5d5cf8cc..4f89b17ec8b2f34b565790163eba5cee54c2f1f7 100644
+--- a/index.html
++++ b/index.html
+@@ -373,17 +373,17 @@ body.recipe-modal-open{overflow:hidden}
+ #panel-task5 button:disabled{opacity:.55;cursor:wait}
+ @media(max-width:600px){.recipe-photo-options{grid-template-columns:1fr}.recipe-photo{padding:12px}.recipe-toolbar .recipe-status{width:100%}}
+ @media(max-width:600px){.recipe-editor{grid-template-columns:1fr}}
+-.users-link{display:inline-flex;align-items:center;gap:7px;color:var(--lime);border:1px solid var(--line);border-radius:7px;padding:8px 12px;text-decoration:none;font-size:13px;white-space:nowrap}.users-link:hover{border-color:var(--lime)}.users-link:focus-visible{outline:3px solid var(--lime);outline-offset:4px}.top-links{display:flex;align-items:center;gap:20px}@media(max-width:700px){.top-links .edition{display:none}.users-link{font-size:12px;padding:7px 9px}}
++.top-links{display:flex;align-items:center;gap:20px}
+ </style>
  
+-<link rel="stylesheet" href="recipes/reviews.css?v=20261016-buttons2">
+-<link rel="stylesheet" href="recipes/cart.css?v=20261016-buttons2">
+-<link rel="stylesheet" href="ui/common.css?v=20261016-buttons2">
++<link rel="stylesheet" href="recipes/reviews.css?v=20261016-sorting1">
++<link rel="stylesheet" href="recipes/catalog.css?v=20261016-sorting1">
++<link rel="stylesheet" href="ui/common.css?v=20261016-sorting1">
+ </head>
+ 
+ <body>
+ 
+-<header><div class="top"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span style="color:var(--lime)">.</span></div><div class="top-links"><span class="edition">DEVELOPMENT TEAM / 04</span><a class="users-link" href="users.html">Задание 6 · Люди ↗</a></div></div>
++<header><div class="top"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span style="color:var(--lime)">.</span></div><div class="top-links"><span class="edition">DEVELOPMENT TEAM / 04</span></div></div>
+ 
+ <nav class="tabs" role="tablist" aria-label="Команда и задания"><button class="tab" id="tab-home" role="tab" aria-selected="true" aria-controls="panel-home" data-view="home">Главная</button><button class="tab" id="tab-alisher" role="tab" aria-selected="false" aria-controls="panel-alisher" tabindex="-1" data-view="alisher">Алишер</button><button class="tab" id="tab-manas" role="tab" aria-selected="false" aria-controls="panel-manas" tabindex="-1" data-view="manas">Манас</button><button class="tab" id="tab-kuanysh" role="tab" aria-selected="false" aria-controls="panel-kuanysh" tabindex="-1" data-view="kuanysh">Куаныш</button><button class="tab" id="tab-khamzat" role="tab" aria-selected="false" aria-controls="panel-khamzat" tabindex="-1" data-view="khamzat">Хамзат</button><button class="tab" id="tab-task1" role="tab" aria-selected="false" aria-controls="panel-task1" tabindex="-1" data-view="task1">Задание 1</button><button class="tab" id="tab-task2" role="tab" aria-selected="false" aria-controls="panel-task2" tabindex="-1" data-view="task2">Задание 2</button>
+ 
+@@ -536,6 +536,8 @@ body.recipe-modal-open{overflow:hidden}
+   <h1>Книга рецептов <span>API</span></h1>
+   <p class="exercise-intro">Получаем рецепты с DummyJSON через GET, отправляем POST, PUT и DELETE. Изменения на тестовом сервере не сохраняются — результат отображается здесь, на странице.</p>
+   <div class="recipe-toolbar"><button type="button" class="action" id="recipe-load">GET · Загрузить рецепты</button><button type="button" class="action" id="recipe-add" aria-haspopup="dialog" aria-expanded="false" aria-controls="recipe-editor-panel">+ Добавить рецепт</button><span class="recipe-status" id="recipe-status" role="status" aria-live="polite">Нажмите «Загрузить рецепты»</span></div>
++  <div id="recipe-filter-controls"></div>
++  <p id="recipe-results" class="recipe-results" role="status"></p>
+   <dialog class="recipe-dialog recipe-editor-panel" id="recipe-editor-panel" aria-labelledby="recipe-form-title">
+     <div class="recipe-dialog-heading"><div><p class="eyebrow">Книга рецептов</p><h2 id="recipe-form-title">Добавить свой рецепт · POST</h2></div><button type="button" class="recipe-dialog-close" id="recipe-editor-close" aria-label="Закрыть форму">×</button></div>
+     <form id="recipe-form">
+@@ -969,5 +971,5 @@ document.getElementById('paragraph-container').appendChild(paragraph);
+ </script>
+ 
+ 
+-<script src="ui/boot.js?v=20261016-buttons2" data-entry="recipes/app.js" data-status="recipe-status" defer></script>
++<script src="ui/boot.js?v=20261016-sorting1" data-entry="recipes/app.js" data-status="recipe-status" defer></script>
+ </body></html>
+diff --git a/recipes/app.js b/recipes/app.js
+index 034da1da4c7a6fc05276d8441932c5d387c03c94..932299f3bdf5b446cd0cf62856ad2736471515a2 100644
+--- a/recipes/app.js
++++ b/recipes/app.js
+@@ -1,5 +1,7 @@
+-import { mountRecipeReviews, reviewCount } from './reviews.js?v=20261016-buttons2';
+-import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
++import { mountRecipeReviews, reviewCount } from './reviews.js?v=20261016-sorting1';
++import { confirmAction } from '../ui/confirm.js?v=20261016-sorting1';
++import { createRecipeFilters, selectRecipes, recipeRating } from './filters.js?v=20261016-sorting1';
++import { createAuthorProfiles } from './authors.js?v=20261016-sorting1';
+ // Задание 5: CRUD-запросы к тестовому API DummyJSON.
+ (() => {
+   const endpoint = 'https://dummyjson.com/recipes';
+@@ -36,6 +38,9 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+   let urlTimer;
+   let editorOpener;
+   let detailsOpener;
++  const filters = createRecipeFilters(document.getElementById('recipe-filter-controls'), 'recipes', render);
++  const profiles = createAuthorProfiles({ getRecipes: () => recipes, openRecipe: id => openDetails(id, detailsOpener) });
++  let loaded = false;
+ 
+   function photoStatus(message, error = false) {
+     photoMessage.textContent = message;
+@@ -135,11 +140,12 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+     document.getElementById('recipe-editor-close').disabled = value;
+     document.getElementById('recipe-cancel').disabled = value;
+     list.querySelectorAll('button').forEach(button => { button.disabled = value; });
++    document.querySelectorAll('#recipe-filter-controls input, #recipe-filter-controls select, #recipe-filter-controls button').forEach(control => { control.disabled = value; });
+     submitButton.disabled = value || photoPending || photoError;
+   }
+   // showModal() затемняет фон и удерживает фокус внутри окна.
+   function syncModalScroll() {
+-    document.body.classList.toggle('recipe-modal-open', editor.open || details.open);
++    document.body.classList.toggle('recipe-modal-open', !!document.querySelector('.recipe-dialog[open]'));
+   }
+   function restoreEditorFocus() {
+     const target = editorOpener && editorOpener.isConnected ? editorOpener : addButton;
+@@ -174,6 +180,10 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+     detailsOpener = opener;
+     detailsTitle.textContent = recipe.name || 'Без названия';
+     detailsContent.replaceChildren();
++    const owner = element('section', undefined, 'recipe-owner-container');
++    owner.setAttribute('aria-label', 'Автор рецепта');
++    detailsContent.append(owner);
++    profiles.mount(owner, recipe);
+     const prep = Number(recipe.prepTimeMinutes) || 0;
+     const cook = Number(recipe.cookTimeMinutes) || 0;
+     const meta = ['ID: ' + recipe.id, 'Время: ' + (prep + cook) + ' мин.'];
+@@ -211,7 +221,7 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+     mountRecipeReviews(reviewsContainer, recipe, () => {
+       const summary = list.querySelector(`[data-reviews-for="${recipe.id}"]`);
+       if (summary) summary.textContent = `Отзывы (${reviewCount(recipe.id)}) →`;
+-    }).then(heading => {
++    }, profiles.open).then(heading => {
+       if (focusReviews && details.open && reviewsContainer.isConnected) {
+         reviewsContainer.scrollIntoView({block:'start'}); heading.focus({preventScroll:true});
+       }
+@@ -245,8 +255,12 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+   }
+   function render() {
+     list.replaceChildren();
+-    if (!recipes.length) { list.append(element('p', 'Рецептов пока нет. Нажмите «Загрузить рецепты».', 'result')); return; }
+-    for (const recipe of recipes) {
++    filters.update(recipes);
++    const visible = selectRecipes(recipes, filters.values());
++    document.getElementById('recipe-results').textContent = loaded || recipes.length ? 'Показано: ' + visible.length + ' из ' + recipes.length : '';
++    if (!recipes.length) { list.append(element('p', loaded ? 'Рецептов пока нет. Добавьте свой рецепт.' : 'Рецептов пока нет. Нажмите «Загрузить рецепты».', 'recipe-empty')); return; }
++    if (!visible.length) { list.append(element('p', 'Ничего не найдено. Измените фильтр или нажмите «Сбросить».', 'recipe-empty')); return; }
++    for (const recipe of visible) {
+       const card = element('article', undefined, 'recipe-item');
+       if (recipe.image) {
+         const img = document.createElement('img');
+@@ -269,7 +283,8 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+       heading.append(open);
+       info.append(heading);
+       const totalTime = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
+-      info.append(element('p', 'ID: ' + recipe.id + ' · ' + totalTime + ' мин.'));
++      const rating = recipeRating(recipe);
++      info.append(element('p', [recipe.cuisine, totalTime + ' мин.', rating === null ? '' : '★ ' + rating, 'ID: ' + recipe.id].filter(Boolean).join(' · ')));
+       info.append(element('p', 'Ингредиенты: ' + (recipe.ingredients || []).join(', ')));
+       info.append(element('p', 'Нажмите, чтобы посмотреть приготовление →', 'recipe-open-hint'));
+       const reviewLink = element('button', `Отзывы (${reviewCount(recipe.id)}) →`, 'recipe-reviews-link');
+@@ -295,9 +310,10 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+     setSaving(true);
+     setStatus('GET · Загрузка...');
+     try {
+-      const data = await request(endpoint + '?limit=12');
++      const data = await request(endpoint + '?limit=0');
+       if (!Array.isArray(data.recipes)) throw new Error('Сервер вернул неверный список рецептов.');
+       recipes = data.recipes;
++      loaded = true;
+       render();
+     } catch (error) { setStatus('GET · Ошибка: ' + error.message); }
+     finally { setSaving(false); }
+@@ -359,7 +375,7 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+           method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(apiPayload)
+         });
+         if (id === null) {
+-          recipes.unshift({...payload, id: nextLocalId++});
++          recipes.unshift({...payload, id: nextLocalId++, userId: 0});
+           setStatus('HTTP 201 Created · Добавлено на страницу (Fake API не сохраняет данные)');
+         } else {
+           recipes = recipes.map(r => r.id === id ? {...r, ...payload} : r);
+diff --git a/recipes/reviews.css b/recipes/reviews.css
+index 03b74ec70cd7c0444766ac384809f4ea65bb3ff6..cf4425506718d656edb3058e213be93bb39fc27c 100644
+--- a/recipes/reviews.css
++++ b/recipes/reviews.css
+@@ -1,2 +1,3 @@
+-.recipe-reviews-link{border:0;background:transparent;color:var(--lime);padding:8px 0;font-size:14px;text-align:left}.recipe-reviews-link:hover{text-decoration:underline}.recipe-reviews{border-top:1px solid var(--line);margin-top:32px;padding-top:26px;scroll-margin-top:24px}.reviews-heading{display:flex;align-items:center;gap:12px}.reviews-heading h3{font-size:23px;margin:0}.reviews-count{font-size:12px;padding:2px 9px;border-radius:20px;color:var(--lime);background:var(--highlight-bg)}.reviews-note{color:var(--muted);font-size:13px;line-height:1.65;margin:12px 0 20px}.reviews-status{font-size:13px;color:var(--lime);overflow-wrap:anywhere}.reviews-status:empty{display:none}.reviews-status[data-error=true]{color:#ffb4aa}.reviews-list{display:grid;gap:14px;margin:20px 0 28px}.recipe-review{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:17px 20px}.recipe-review-author{display:block;max-width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:0;border-radius:8px}.recipe-review-author:hover .user-name{color:var(--lime)}.recipe-review-author .user-card{display:flex;align-items:center;gap:12px;padding:0}.recipe-review-author .avatar{width:48px;height:48px;font-size:18px;border-radius:10px}.recipe-review-author .user-name{font-size:15px;font-weight:700}.recipe-review-author .user-handle{font-size:12px}.recipe-review-author .user-meta{font-size:10px;gap:6px;margin-top:4px}.recipe-review-author .role-badge{padding:1px 5px;font-size:10px}.recipe-review-author .user-info,.recipe-author-dialog .user-info{display:flex;flex-direction:column;min-width:0}.recipe-review-author .user-handle,.recipe-author-dialog .user-handle{color:var(--muted);overflow-wrap:anywhere}.recipe-review-author .user-name,.recipe-author-dialog .user-name{overflow-wrap:anywhere}.recipe-review-author .user-meta,.recipe-author-dialog .user-meta{display:flex;flex-wrap:wrap;align-items:center;color:var(--muted)}.recipe-review-author .role-badge,.recipe-author-dialog .role-badge{background:var(--surface);border:1px solid var(--line);color:var(--secondary);border-radius:4px}.recipe-review-author .avatar,.recipe-author-dialog .avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;background:var(--highlight-bg);color:var(--lime);font-weight:700}.recipe-review-author .avatar img,.recipe-author-dialog .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.review-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:15px 0 8px}.review-stars{letter-spacing:3px;color:var(--lime);font-size:16px}.review-source{font-size:11px;color:var(--muted)}.review-body{font-size:15px;color:var(--secondary);margin:0;white-space:pre-line;overflow-wrap:anywhere}.review-author-unavailable{color:var(--muted);font-size:13px}.review-form{border-top:1px solid var(--line);padding-top:25px}.review-form fieldset{padding:0;margin:0;border:0;min-width:0}.review-form legend{font-size:20px;font-weight:700;padding:0;margin-bottom:20px}.review-form-controls{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:15px;margin-bottom:16px}.review-form label{display:grid;gap:7px;font-size:13px;color:var(--secondary)}.review-form select,.review-form textarea{width:100%;min-width:0;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;padding:11px 12px}.review-form textarea{resize:vertical}.review-form :is(select,textarea):focus-visible{outline:3px solid var(--lime);outline-offset:3px}.recipe-author-dialog{max-width:940px;padding:0}.recipe-author-dialog .author-close{position:absolute;right:18px;top:18px;z-index:1}.recipe-author-dialog .profile-layout{display:grid;grid-template-columns:.9fr 1.1fr;min-height:480px}.recipe-author-dialog .profile-summary{padding:40px 30px;background:var(--card-start);border-right:1px solid var(--line);min-width:0}.recipe-author-dialog .profile-summary .avatar{width:140px;height:140px;border-radius:20px;font-size:44px;margin:26px 0}.recipe-author-dialog .profile-summary h2{font-size:30px;overflow-wrap:anywhere}.recipe-author-dialog .profile-username{color:var(--lime);font-size:14px;overflow-wrap:anywhere}.recipe-author-dialog .profile-description{color:var(--secondary);font-size:14px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}.recipe-author-dialog .profile-data{padding:70px 28px 28px;min-width:0}.recipe-author-dialog .user-card{display:flex;align-items:center;gap:15px;border:1px solid var(--line);background:var(--bg);border-radius:12px;min-height:132px;padding:20px;max-width:380px;margin-bottom:20px}.recipe-author-dialog .user-card .avatar{width:65px;height:65px;border-radius:12px;font-size:22px}.recipe-author-dialog .user-name{font-size:17px;font-weight:700}.recipe-author-dialog .user-handle{font-size:13px;margin-top:4px}.recipe-author-dialog .user-meta{gap:8px;font-size:10px;margin-top:10px}.recipe-author-dialog .role-badge{padding:2px 5px}.recipe-author-dialog .profile-fields{margin:0}.recipe-author-dialog .profile-field{display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.recipe-author-dialog dt{color:var(--muted)}.recipe-author-dialog dd{margin:0;overflow-wrap:anywhere}.recipe-author-dialog .form-status:empty,.recipe-author-dialog .profile-actions:empty{display:none}.author-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;border-top:1px solid var(--line);padding:20px 28px}.author-catalog{color:var(--lime);font-size:13px;text-underline-offset:4px}.author-catalog:focus-visible{outline:3px solid var(--lime);outline-offset:4px}@media(max-width:650px){.recipe-author-dialog .profile-layout{grid-template-columns:1fr}.recipe-author-dialog .profile-summary{border-right:0;border-bottom:1px solid var(--line);padding:26px}.recipe-author-dialog .profile-data{padding:25px}.recipe-author-dialog .profile-summary .avatar{width:100px;height:100px}.recipe-author-dialog .user-card{max-width:none}.author-footer{padding:18px 24px}.recipe-review{padding:16px}.review-form-controls{grid-template-columns:minmax(0,1fr)}.reviews-heading h3{font-size:21px}}
++.recipe-reviews-link{border:0;background:transparent;color:var(--lime);padding:8px 0;font-size:14px;text-align:left}.recipe-reviews-link:hover{text-decoration:underline}.recipe-reviews{border-top:1px solid var(--line);margin-top:32px;padding-top:26px;scroll-margin-top:24px}.reviews-heading{display:flex;align-items:center;gap:12px}.reviews-heading h3{font-size:23px;margin:0}.reviews-count{font-size:12px;padding:2px 9px;border-radius:20px;color:var(--lime);background:var(--highlight-bg)}.reviews-note{color:var(--muted);font-size:13px;line-height:1.65;margin:12px 0 20px}.reviews-status{font-size:13px;color:var(--lime);overflow-wrap:anywhere}.reviews-status:empty{display:none}.reviews-status[data-error=true]{color:#ffb4aa}.reviews-list{display:grid;gap:14px;margin:20px 0 28px}.recipe-review{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:17px 20px}.recipe-review-author{display:block;max-width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:0;border-radius:8px}.recipe-review-author:hover .user-name{color:var(--lime)}.recipe-review-author .user-card{display:flex;align-items:center;gap:12px;padding:0}.recipe-review-author .avatar{width:48px;height:48px;font-size:18px;border-radius:10px}.recipe-review-author .user-name{font-size:15px;font-weight:700}.recipe-review-author .user-handle{font-size:12px}.recipe-review-author .user-meta{font-size:10px;gap:6px;margin-top:4px}.recipe-review-author .role-badge{padding:1px 5px;font-size:10px}.recipe-review-author .user-info,.recipe-author-dialog .user-info{display:flex;flex-direction:column;min-width:0}.recipe-review-author .user-handle,.recipe-author-dialog .user-handle{color:var(--muted);overflow-wrap:anywhere}.recipe-review-author .user-name,.recipe-author-dialog .user-name{overflow-wrap:anywhere}.recipe-review-author .user-meta,.recipe-author-dialog .user-meta{display:flex;flex-wrap:wrap;align-items:center;color:var(--muted)}.recipe-review-author .role-badge,.recipe-author-dialog .role-badge{background:var(--surface);border:1px solid var(--line);color:var(--secondary);border-radius:4px}.recipe-review-author .avatar,.recipe-author-dialog .avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;background:var(--highlight-bg);color:var(--lime);font-weight:700}.recipe-review-author .avatar img,.recipe-author-dialog .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.review-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:15px 0 8px}.review-stars{letter-spacing:3px;color:var(--lime);font-size:16px}.review-source{font-size:11px;color:var(--muted)}.review-body{font-size:15px;color:var(--secondary);margin:0;white-space:pre-line;overflow-wrap:anywhere}.review-author-unavailable{color:var(--muted);font-size:13px}.review-form{border-top:1px solid var(--line);padding-top:25px}.review-form fieldset{padding:0;margin:0;border:0;min-width:0}.review-form legend{font-size:20px;font-weight:700;padding:0;margin-bottom:20px}.review-form-controls{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:15px;margin-bottom:16px}.review-form label{display:grid;gap:7px;font-size:13px;color:var(--secondary)}.review-form select,.review-form textarea{width:100%;min-width:0;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;padding:11px 12px}.review-form textarea{resize:vertical}.review-form :is(select,textarea):focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+ .review-field{display:grid;gap:7px}
++@media(max-width:650px){.recipe-review{padding:16px}.review-form-controls{grid-template-columns:minmax(0,1fr)}.reviews-heading h3{font-size:21px}}
+diff --git a/recipes/reviews.js b/recipes/reviews.js
+index 999978ef746dbd6709208562184e471d88f0b621..69c4ff5298b8eb2b95f0d8a3e429a478a075202a 100644
+--- a/recipes/reviews.js
++++ b/recipes/reviews.js
+@@ -1,48 +1,11 @@
+-import { getUsers } from '../users/api.js?v=20261016-buttons2';
+-import { fullName } from '../users/model.js?v=20261016-buttons2';
+-import { element, showProfile, userCard } from '../users/details.js?v=20261016-buttons2';
+-import { ReviewStore } from './review-store.js?v=20261016-buttons2';
++import { fullName } from '../users/model.js?v=20261016-sorting1';
++import { element, userCard, loadAuthors } from './authors.js?v=20261016-sorting1';
++import { ReviewStore } from './review-store.js?v=20261016-sorting1';
+ 
+ const reviews = new ReviewStore();
+-let usersPromise;
+-let authorDialog;
+-let authorOpener;
+ export const reviewCount = recipeId => reviews.get(recipeId).length;
+ 
+-function loadUsers() {
+-  if (!usersPromise) usersPromise = getUsers().catch(error => { usersPromise = null; throw error; });
+-  return usersPromise;
+-}
+-
+-function openAuthor(userId, users, source) {
+-  if (!authorDialog) {
+-    authorDialog = element('dialog', 'recipe-dialog recipe-author-dialog');
+-    authorDialog.id = 'profile-dialog'; authorDialog.setAttribute('aria-labelledby', 'profile-title');
+-    const close = element('button', 'recipe-dialog-close author-close', '×');
+-    close.type = 'button'; close.setAttribute('aria-label', 'Закрыть профиль автора');
+-    close.addEventListener('click', () => authorDialog.close());
+-    const container = element('div'); container.id = 'profile-container';
+-    const footer = element('div', 'author-footer');
+-    const back = element('button', 'recipe-secondary', '← Вернуться к рецепту'); back.type = 'button';
+-    back.addEventListener('click', () => authorDialog.close());
+-    const catalog = element('a', 'author-catalog', 'Открыть в каталоге людей ↗'); catalog.id = 'author-catalog-link';
+-    footer.append(back, catalog); authorDialog.append(close, container, footer); document.body.append(authorDialog);
+-    authorDialog.addEventListener('close', () => {
+-      if (authorOpener?.isConnected && document.getElementById('recipe-details').open) authorOpener.focus({ preventScroll: true });
+-    });
+-    document.getElementById('recipe-details').addEventListener('close', () => { if (authorDialog.open) authorDialog.close(); });
+-    window.addEventListener('hashchange', () => { if (authorDialog.open) authorDialog.close(); });
+-  }
+-  authorOpener = source;
+-  document.getElementById('author-catalog-link').href = `users.html?user=${userId}`;
+-  const profileApp = {
+-    users, ready: true, busy: false,
+-    openDialog(dialog, initialFocus) { dialog.showModal(); dialog.scrollTop = 0; initialFocus.focus({ preventScroll: true }); }
+-  };
+-  showProfile(profileApp, userId, source, { readOnly: true });
+-}
+-
+-export async function mountRecipeReviews(container, recipe, onChange = () => {}) {
++export async function mountRecipeReviews(container, recipe, onChange = () => {}, onAuthor = () => {}) {
+   const headingRow = element('div', 'reviews-heading');
+   const heading = element('h3', '', 'Отзывы о блюде'); heading.id = `reviews-title-${recipe.id}`; heading.tabIndex = -1;
+   const count = element('span', 'reviews-count');
+@@ -80,8 +43,8 @@ export async function mountRecipeReviews(container, recipe, onChange = () => {})
+       const user = users.find(person => person.id === review.userId);
+       if (user) {
+         const button = element('button', 'recipe-review-author'); button.type = 'button';
+-        button.setAttribute('aria-label', `Открыть профиль автора: ${fullName(user)}`); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'profile-dialog');
+-        button.append(userCard(user)); button.addEventListener('click', () => openAuthor(user.id, users, button)); item.append(button);
++        button.setAttribute('aria-label', `Открыть профиль автора отзыва: ${fullName(user)}`); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'recipe-author-dialog');
++        button.append(userCard(user)); button.addEventListener('click', () => onAuthor(user, button)); item.append(button);
+       } else item.append(element('p', 'review-author-unavailable', `Автор #${review.userId} · профиль пока недоступен`));
+       const meta = element('div', 'review-meta');
+       const stars = element('span', 'review-stars', '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)); stars.setAttribute('aria-label', `Оценка ${review.rating} из 5`);
+@@ -95,7 +58,7 @@ export async function mountRecipeReviews(container, recipe, onChange = () => {})
+   async function load() {
+     retry.hidden = true; fieldset.disabled = true; status.textContent = 'Загружаем профили авторов…'; status.dataset.error = 'false';
+     try {
+-      users = await loadUsers();
++      users = await loadAuthors();
+       if (!container.isConnected) return;
+       const placeholder = element('option', '', 'Выберите автора'); placeholder.value = ''; author.replaceChildren(placeholder);
+       for (const user of [...users].sort((a, b) => fullName(a).localeCompare(fullName(b)))) {
+diff --git a/ui/boot.js b/ui/boot.js
+index a3264c7c3abd8e029f1cc68a61ceba54bccef727..dbec80f648497b80acbd27983c36870a8c9e9127 100644
+--- a/ui/boot.js
++++ b/ui/boot.js
+@@ -5,15 +5,13 @@
+     const status = document.getElementById(script.dataset.status);
+     if (status) {
+       status.dataset.error = 'true';
+-      status.textContent = 'Для заданий 5 и 6 запустите START-SITE.cmd из папки сайта. Он откроет сайт через локальный сервер.';
++      status.textContent = 'Для рецептов запустите START-SITE.cmd из папки сайта. Он откроет сайт через локальный сервер.';
+       const link = document.createElement('a');
+       link.className = 'button secondary recipe-secondary';
+       link.textContent = 'Открыть сайт, если сервер уже запущен';
+-      link.href = 'http://127.0.0.1:8000/' + (script.dataset.entry.startsWith('users/') ? 'users.html' : 'index.html#task5');
++      link.href = 'http://127.0.0.1:8000/index.html#task5';
+       status.after(link);
+     }
+-    document.getElementById('user-count')?.replaceChildren('Откройте сайт через START-SITE.cmd');
+-    document.getElementById('user-list')?.setAttribute('aria-busy', 'false');
+     document.querySelectorAll('#recipe-load, #recipe-add').forEach(button => { button.disabled = true; });
+     return;
+   }
+@@ -30,7 +28,5 @@
+     retry.type = 'button'; retry.className = 'button secondary recipe-secondary'; retry.textContent = 'Перезагрузить страницу';
+     retry.addEventListener('click', () => location.reload());
+     status.after(retry);
+-    document.getElementById('user-count')?.replaceChildren('Каталог не запущен');
+-    document.getElementById('user-list')?.setAttribute('aria-busy', 'false');
+   });
+ })();
