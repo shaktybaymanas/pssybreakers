@@ -1,159 +1,225 @@
-diff --git a/recipes/filters.js b/recipes/filters.js
+diff --git a/recipes/authors.js b/recipes/authors.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..8ab664cef9e54b3a876b978c83ee8beb54de68ec
+index 0000000000000000000000000000000000000000..9b0914b9712702c9e5ec417a63549e86685d4146
 --- /dev/null
-+++ b/recipes/filters.js
-@@ -0,0 +1,94 @@
-+function nonNegativeNumber(value) {
-+  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : null;
-+}
-+export const recipeRating = recipe => nonNegativeNumber(recipe.rating);
-+function recipeMinutes(recipe) {
-+  const prep = nonNegativeNumber(recipe.prepTimeMinutes);
-+  const cook = nonNegativeNumber(recipe.cookTimeMinutes);
-+  return prep === null && cook === null ? null : (prep || 0) + (cook || 0);
-+}
-+const sortOptions = [
-+  ['', 'По умолчанию'],
-+  ['name-asc', 'Название: А → Я / A → Z'],
-+  ['name-desc', 'Название: Я → А / Z → A'],
-+  ['time-asc', 'Сначала быстрые'],
-+  ['time-desc', 'Сначала долгие'],
-+  ['rating-desc', 'Сначала высокий рейтинг'],
-+  ['rating-asc', 'Сначала низкий рейтинг']
-+];
++++ b/recipes/authors.js
+@@ -0,0 +1,134 @@
++import { getUsers } from '../users/api.js?v=20261016-sorting1';
++import { fullName, httpUrl, roleLabels } from '../users/model.js?v=20261016-sorting1';
++import { createRecipeFilters, selectRecipes, difficultyLabels, categoryLabels, recipeRating } from './filters.js?v=20261016-sorting1';
 +
-+export function selectRecipes(recipes, { query = '', cuisine = '', difficulty = '', category = '', sort = '' } = {}, authorId) {
-+  const words = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-+  const visible = recipes.filter(recipe => {
-+    const text = [recipe.name, ...(recipe.ingredients || [])].join(' ').toLocaleLowerCase();
-+    return (authorId === undefined || (recipe.userId != null && Number(recipe.userId) === Number(authorId)))
-+      && (!cuisine || recipe.cuisine === cuisine)
-+      && (!difficulty || recipe.difficulty === difficulty)
-+      && (!category || (recipe.mealType || []).includes(category))
-+      && words.every(word => text.includes(word));
-+  });
-+  if (!sort || !sortOptions.some(([value]) => value === sort)) return visible;
-+  const [field, order] = sort.split('-');
-+  const direction = order === 'desc' ? -1 : 1;
-+  return visible.sort((a, b) => {
-+    if (field === 'name') return direction * String(a.name || '').localeCompare(String(b.name || ''), ['ru', 'en'], { sensitivity: 'base', numeric: true });
-+    const left = field === 'time' ? recipeMinutes(a) : recipeRating(a);
-+    const right = field === 'time' ? recipeMinutes(b) : recipeRating(b);
-+    // Неизвестное время или рейтинг всегда идут после заполненных значений.
-+    if (left === null) return right === null ? 0 : 1;
-+    if (right === null) return -1;
-+    return direction * (left - right);
-+  });
++let authorsPromise;
++export function loadAuthors() {
++  if (!authorsPromise) authorsPromise = getUsers().catch(error => { authorsPromise = null; throw error; });
++  return authorsPromise;
 +}
-+
-+export const difficultyLabels = { Easy: 'Легко', Medium: 'Средне', Hard: 'Сложно' };
-+export const categoryLabels = { Breakfast: 'Завтрак', Lunch: 'Обед', Dinner: 'Ужин', Dessert: 'Десерт', Snack: 'Перекус', Snacks: 'Перекусы', Beverage: 'Напиток', Appetizer: 'Закуска', 'Side Dish': 'Гарнир' };
-+
-+// Каждый экземпляр хранит свои значения: фильтр профиля не меняет общий каталог.
-+export function createRecipeFilters(container, prefix, onChange, { categories = false } = {}) {
-+  container.className = 'recipe-filters';
-+  container.setAttribute('role', 'search');
-+  container.setAttribute('aria-label', prefix === 'author' ? 'Фильтр рецептов автора' : 'Фильтр рецептов');
-+  const controls = {};
-+  const fields = [['query', 'Название или ингредиент', 'input'], ...(categories
-+    ? [['category', 'Категория', 'select']]
-+    : [['cuisine', 'Кухня', 'select'], ['difficulty', 'Сложность', 'select']]), ['sort', 'Сортировка', 'select']];
-+  for (const [key, caption, tag] of fields) {
-+    const label = document.createElement('label');
-+    label.className = 'recipe-filter-' + key;
-+    label.textContent = caption;
-+    const input = document.createElement(tag);
-+    input.id = prefix + '-' + key;
-+    if (tag === 'input') { input.type = 'search'; input.placeholder = 'Например, pizza или chicken'; }
-+    label.append(input); container.append(label); controls[key] = input;
-+    input.addEventListener(tag === 'input' ? 'input' : 'change', onChange);
++export function element(tag, className, text) {
++  const node = document.createElement(tag);
++  if (className) node.className = className;
++  if (text !== undefined) node.textContent = text;
++  return node;
++}
++export function userCard(user) {
++  const card = element('span', 'author-card');
++  const avatar = element('span', 'author-avatar', ((user.firstName || '')[0] || '?') + ((user.lastName || '')[0] || ''));
++  avatar.setAttribute('aria-hidden', 'true');
++  if (httpUrl(user.image)) {
++    const image = element('img'); image.alt = ''; image.loading = 'lazy';
++    image.addEventListener('error', () => image.remove(), { once: true }); image.src = user.image; avatar.append(image);
 +  }
-+  for (const [value, caption] of sortOptions) {
-+    const option = document.createElement('option'); option.value = value; option.textContent = caption;
-+    controls.sort.append(option);
++  const info = element('span', 'author-info');
++  info.append(element('span', 'author-name', fullName(user)));
++  if (user.username) info.append(element('span', 'author-handle', '@' + user.username));
++  card.append(avatar, info); return card;
++}
++
++export function createAuthorProfiles({ getRecipes, openRecipe }) {
++  let dialog, content, opener, restoreFocus = true;
++  function ensureDialog() {
++    if (dialog) return;
++    dialog = element('dialog', 'recipe-dialog recipe-author-dialog');
++    dialog.id = 'recipe-author-dialog'; dialog.setAttribute('aria-labelledby', 'author-profile-title');
++    const close = element('button', 'recipe-dialog-close author-close', '×'); close.type = 'button';
++    close.setAttribute('aria-label', 'Закрыть профиль автора'); close.addEventListener('click', () => dialog.close());
++    content = element('div');
++    const footer = element('div', 'author-footer');
++    const back = element('button', 'recipe-secondary', '← Вернуться к рецепту'); back.type = 'button';
++    back.addEventListener('click', () => dialog.close()); footer.append(back);
++    dialog.append(close, content, footer); document.body.append(dialog);
++    dialog.addEventListener('close', () => {
++      document.body.classList.toggle('recipe-modal-open', !!document.querySelector('.recipe-dialog[open]'));
++      if (restoreFocus && opener?.isConnected) opener.focus({ preventScroll: true });
++      restoreFocus = true;
++    });
++    document.getElementById('recipe-details').addEventListener('close', () => { if (dialog.open) dialog.close(); });
++    window.addEventListener('hashchange', () => { if (dialog.open) dialog.close(); });
 +  }
-+  const reset = document.createElement('button');
-+  reset.type = 'button'; reset.className = 'recipe-secondary'; reset.textContent = 'Сбросить';
-+  reset.addEventListener('click', () => { Object.values(controls).forEach(input => { input.value = ''; }); onChange(); controls.query.focus(); });
-+  container.append(reset);
-+  function options(key, values, caption, labels = {}) {
-+    const input = controls[key];
-+    const selected = input.value;
-+    input.replaceChildren();
-+    for (const value of ['', ...new Set(values.filter(Boolean).sort())]) {
-+      const option = document.createElement('option');
-+      option.value = value; option.textContent = value ? labels[value] || value : caption; input.append(option);
++  function open(user, source) {
++    ensureDialog(); opener = source;
++    content.replaceChildren();
++    const layout = element('div', 'author-profile-layout');
++    const data = element('section', 'author-profile-data'); data.setAttribute('aria-label', 'Информация о пользователе');
++    const title = element('h2', '', fullName(user)); title.id = 'author-profile-title'; title.tabIndex = -1;
++    data.append(element('p', 'eyebrow', 'Профиль автора'), title, userCard(user));
++    const fields = element('dl', 'author-profile-fields');
++    for (const [label, value] of [
++      ['ID', user.id === 0 ? 'Локальный профиль' : user.id],
++      ['Имя', fullName(user)], ['Ник', user.username ? '@' + user.username : 'Не указан'],
++      ['Роль', user.id === 0 ? 'Автор на этой странице' : roleLabels[user.role] || 'Не указана'],
++      ['Почта', user.email || 'Не указана'], ['Телефон', user.phone || 'Не указан']
++    ]) {
++      const row = element('div', 'author-profile-field');
++      row.append(element('dt', '', label), element('dd', '', String(value))); fields.append(row);
 +    }
-+    input.value = [...input.options].some(option => option.value === selected) ? selected : '';
-+  }
-+  return {
-+    values: () => Object.fromEntries(Object.entries(controls).map(([key, input]) => [key, input.value])),
-+    update(recipes) {
-+      if (categories) options('category', recipes.flatMap(recipe => recipe.mealType || []), 'Все категории', categoryLabels);
-+      else {
-+        options('cuisine', recipes.map(recipe => recipe.cuisine), 'Любая кухня');
-+        options('difficulty', recipes.map(recipe => recipe.difficulty), 'Любая сложность', difficultyLabels);
++    data.append(fields);
++    if (user.description) data.append(element('p', 'author-description', user.description));
++    const section = element('section', 'author-recipes');
++    const heading = element('h3', '', 'Рецепты автора');
++    const filtersBox = element('div');
++    const count = element('p', 'recipe-results'); count.setAttribute('role', 'status');
++    const list = element('div', 'author-recipe-list');
++    section.setAttribute('aria-label', 'Блюда и категории автора');
++    section.append(element('p', 'eyebrow', 'Блюда автора'), heading, filtersBox, count, list);
++    layout.append(section, data); content.append(layout);
++    const recipes = selectRecipes(getRecipes(), {}, user.id);
++    const filters = createRecipeFilters(filtersBox, 'author', render, { categories: true });
++    filters.update(recipes);
++    function render() {
++      const visible = selectRecipes(recipes, filters.values());
++      count.textContent = 'Показано: ' + visible.length + ' из ' + recipes.length;
++      list.replaceChildren();
++      if (!visible.length) {
++        list.append(element('p', 'recipe-empty', recipes.length ? 'Ничего не найдено. Измените фильтр или нажмите «Сбросить».' : 'В каталоге пока нет рецептов этого автора.'));
++      }
++      for (const recipe of visible) {
++        const button = element('button', 'author-recipe'); button.type = 'button';
++        button.setAttribute('aria-label', 'Открыть рецепт: ' + recipe.name);
++        if (recipe.image) {
++          const image = element('img'); image.src = recipe.image; image.alt = ''; image.loading = 'lazy';
++          image.addEventListener('error', () => image.remove(), { once: true }); button.append(image);
++        }
++        const info = element('span', 'author-recipe-info');
++        info.append(element('strong', '', recipe.name));
++        const time = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
++        const rating = recipeRating(recipe);
++        info.append(element('span', '', [recipe.cuisine, difficultyLabels[recipe.difficulty] || recipe.difficulty, time + ' мин.', rating === null ? '' : '★ ' + rating].filter(Boolean).join(' · ')));
++        if (recipe.mealType?.length) info.append(element('span', 'author-recipe-category', recipe.mealType.map(value => categoryLabels[value] || value).join(' · ')));
++        button.append(info, element('span', 'author-recipe-arrow', '↗'));
++        button.addEventListener('click', () => { restoreFocus = false; dialog.close(); openRecipe(recipe.id); });
++        list.append(button);
 +      }
 +    }
-+  };
++    render();
++    if (!dialog.open) dialog.showModal();
++    document.body.classList.add('recipe-modal-open'); dialog.scrollTop = 0; title.focus({ preventScroll: true });
++  }
++  async function mount(container, recipe) {
++    if (recipe.userId == null) { container.replaceChildren(element('p', 'reviews-note', 'Автор рецепта не указан.')); return; }
++    container.replaceChildren(element('p', 'reviews-note', 'Загружаем автора рецепта…'));
++    try {
++      const user = Number(recipe.userId) === 0
++        ? { id: 0, firstName: 'Вы', lastName: '', username: '', description: 'Рецепты, добавленные вами на этой странице.' }
++        : (await loadAuthors()).find(item => item.id === Number(recipe.userId));
++      if (!container.isConnected) return;
++      if (!user) throw new Error('Автор рецепта не найден.');
++      const button = element('button', 'recipe-owner'); button.type = 'button';
++      button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'recipe-author-dialog');
++      button.setAttribute('aria-label', 'Открыть профиль автора рецепта: ' + fullName(user));
++      const info = element('span', 'recipe-owner-info');
++      info.append(element('span', 'recipe-owner-label', 'Автор рецепта'), userCard(user));
++      button.append(info, element('span', 'recipe-owner-link', 'Все рецепты автора →'));
++      button.addEventListener('click', () => open(user, button)); container.replaceChildren(button);
++    } catch (error) {
++      if (!container.isConnected) return;
++      const retry = element('button', 'recipe-secondary', 'Повторить загрузку автора'); retry.type = 'button';
++      retry.addEventListener('click', () => mount(container, recipe));
++      container.replaceChildren(element('p', 'reviews-status', error.message), retry);
++    }
++  }
++  return { mount, open };
 +}
-diff --git a/tests/recipes.test.mjs b/tests/recipes.test.mjs
+diff --git a/recipes/catalog.css b/recipes/catalog.css
 new file mode 100644
-index 0000000000000000000000000000000000000000..074faeaadcb9e89b2e24e0a861a6e3ec4ba2ed9f
+index 0000000000000000000000000000000000000000..5be8b2b064b71e8b2de8b3b2e6f11bd58a849ced
 --- /dev/null
-+++ b/tests/recipes.test.mjs
-@@ -0,0 +1,53 @@
-+import test from 'node:test';
-+import assert from 'node:assert/strict';
-+import { selectRecipes } from '../recipes/filters.js';
-+const recipes = [
-+  { id: 1, userId: 45, name: 'Classic Pizza', ingredients: ['Tomato', 'Cheese'], cuisine: 'Italian', difficulty: 'Easy' },
-+  { id: 2, userId: 9, name: 'Chicken Soup', ingredients: ['Chicken'], cuisine: 'Asian', difficulty: 'Easy' },
-+  { id: 31, userId: 45, name: 'Tomato Soup', ingredients: ['Tomato', 'Cream'], cuisine: 'French', difficulty: 'Medium' },
-+  { id: 100000, userId: 0, name: 'Свой рецепт', ingredients: ['Рис'] },
-+  { id: 100001, name: 'Без автора' }
-+];
-+test('author list uses userId and includes recipes outside the first page', () => {
-+  assert.deepEqual(selectRecipes(recipes, {}, 45).map(item => item.id), [1, 31]);
-+  assert.deepEqual(selectRecipes(recipes, {}, 0).map(item => item.id), [100000]);
-+  assert.deepEqual(selectRecipes(recipes, {}, 404), []);
-+});
-+test('search combines words from title and ingredients without case sensitivity', () => {
-+  assert.deepEqual(selectRecipes(recipes, { query: '  PIZZA tomato  ' }).map(item => item.id), [1]);
-+  assert.deepEqual(selectRecipes(recipes, { query: 'рис' }).map(item => item.id), [100000]);
-+});
-+test('cuisine and difficulty combine with search and author restrictions', () => {
-+  assert.deepEqual(selectRecipes(recipes, { query: 'tomato', cuisine: 'French', difficulty: 'Medium' }, 45).map(item => item.id), [31]);
-+  assert.deepEqual(selectRecipes(recipes, { cuisine: 'Asian' }, 45), []);
-+});
-+test('filtering never modifies the catalog; resetting returns all recipes', () => {
-+  const before = JSON.stringify(recipes);
-+  selectRecipes(recipes, { query: 'not found' });
-+  assert.equal(JSON.stringify(recipes), before);
-+  assert.deepEqual(selectRecipes(recipes), recipes);
-+});
-+
-+const sortable = [
-+  { id: 1, userId: 45, name: 'B dish', prepTimeMinutes: 30, cookTimeMinutes: 15, rating: 4.5, mealType: ['Dinner'] },
-+  { id: 2, userId: 9, name: 'A dish', prepTimeMinutes: 10, cookTimeMinutes: 5, rating: 4.9 },
-+  { id: 3, userId: 45, name: 'C dish', prepTimeMinutes: 5, cookTimeMinutes: 5, rating: 4.5, mealType: ['Dinner'] },
-+  { id: 4, userId: 45, name: 'D dish' }
-+];
-+const sortedIds = sort => selectRecipes(sortable, { sort }).map(recipe => recipe.id);
-+test('name and total cooking time sort in both directions without modifying source order', () => {
-+  assert.deepEqual(sortedIds('name-asc'), [2, 1, 3, 4]);
-+  assert.deepEqual(sortedIds('name-desc'), [4, 3, 1, 2]);
-+  assert.deepEqual(sortedIds('time-asc'), [3, 2, 1, 4]);
-+  assert.deepEqual(sortedIds('time-desc'), [1, 2, 3, 4]);
-+  assert.deepEqual(sortedIds(''), [1, 2, 3, 4]);
-+});
-+test('rating sorting preserves equal-rating order and puts missing ratings last in both directions', () => {
-+  assert.deepEqual(sortedIds('rating-desc'), [2, 1, 3, 4]);
-+  assert.deepEqual(sortedIds('rating-asc'), [1, 3, 2, 4]);
-+  assert.deepEqual(selectRecipes([{id:1,rating:null},{id:2,rating:0},{id:3,rating:''},{id:4,rating:'wrong'}], {sort:'rating-asc'}).map(item => item.id), [2,1,3,4]);
-+});
-+test('sorting applies after author, category and search filtering', () => {
-+  assert.deepEqual(selectRecipes(sortable, { query: 'dish', category: 'Dinner', sort: 'time-asc' }, 45).map(item => item.id), [3, 1]);
-+  assert.deepEqual(sortedIds('unsupported'), [1, 2, 3, 4]);
-+});
++++ b/recipes/catalog.css
+@@ -0,0 +1,67 @@
++.recipe-filters{display:grid;grid-template-columns:minmax(170px,1.5fr) minmax(110px,1fr) minmax(110px,1fr) minmax(190px,1.3fr) auto;gap:14px;align-items:end;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:25px 0 12px}
++.recipe-filters label{display:grid;gap:7px;font-size:13px;color:var(--secondary);min-width:0}
++.recipe-filters input,.recipe-filters select{width:100%;min-width:0;padding:12px;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;min-height:44px}
++.recipe-filters button{min-height:44px}
++.recipe-results{color:var(--muted);font-size:14px;margin:12px 0}
++.recipe-empty{grid-column:1/-1;padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
++.recipe-owner{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;text-align:left;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:0 0 22px}
++.recipe-owner:hover,.author-recipe:hover{border-color:var(--lime)}
++.recipe-owner-label{display:block;color:var(--muted);font-size:12px;margin-bottom:9px}
++.recipe-owner-link{color:var(--lime);font-size:13px}
++.author-card{display:flex;gap:12px;align-items:center;min-width:0}
++.author-avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;width:48px;height:48px;border-radius:12px;background:var(--highlight-bg);color:var(--lime);font-size:18px;font-weight:700}
++.author-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
++.author-info{display:grid;gap:3px;min-width:0}
++.author-name{font-size:16px;font-weight:700;overflow-wrap:anywhere}
++.author-handle{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
++.recipe-author-dialog{max-width:1000px;padding:0}
++.recipe-author-dialog .author-close{position:absolute;right:20px;top:20px}
++.author-profile-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:stretch;min-height:500px}
++.author-profile-data{padding:64px 28px 30px;background:var(--bg);border-left:1px solid var(--line);min-width:0}
++.author-profile-data h2{font-size:28px;margin:0 0 22px;overflow-wrap:anywhere}
++.author-profile-data .author-card{border:1px solid var(--line);background:var(--surface);padding:18px;border-radius:12px;margin-bottom:20px}
++.author-profile-data .author-avatar{width:64px;height:64px;font-size:23px}
++.author-profile-fields{margin:0}
++.author-profile-field{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
++.author-profile-field dt{color:var(--muted)}
++.author-profile-field dd{margin:0;overflow-wrap:anywhere}
++.author-description{font-size:13px;color:var(--muted);margin:20px 0 0;line-height:1.7;overflow-wrap:anywhere}
++.author-recipes{padding:32px 28px;min-width:0}
++.author-recipes h3{margin:0;font-size:25px}
++.author-recipes .recipe-filters{grid-template-columns:minmax(0,1fr) auto;padding:0;border:0;margin-top:24px}
++.author-recipes .recipe-filters label:first-child{grid-column:1/-1}
++.author-recipes .recipe-filters .recipe-filter-category{grid-column:1/-1}
++.author-recipes .recipe-filters button{grid-column:auto}
++.author-recipe-list{display:grid;gap:10px;margin-top:18px}
++.author-recipe{display:flex;align-items:center;gap:14px;width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);text-align:left}
++.author-recipe img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex:none}
++.author-recipe-info{display:grid;gap:7px;min-width:0}
++.author-recipe-info strong{font-size:16px;overflow-wrap:anywhere}
++.author-recipe-info>span{font-size:12px;color:var(--muted)}
++.author-recipe-info .author-recipe-category{color:var(--lime)}
++.author-recipe-arrow{margin-left:auto;color:var(--lime)}
++.author-footer{display:flex;padding:18px 28px;border-top:1px solid var(--line)}
++.recipe-filters :is(input,select,button):focus-visible,.recipe-owner:focus-visible,.author-recipe:focus-visible,.recipe-review-author:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
++@media(max-width:1000px){
++  .recipe-filters{grid-template-columns:1fr 1fr}.recipe-filters label:first-child{grid-column:1/-1}.recipe-filters button{grid-column:1/-1}
++  #recipe-filter-controls .recipe-filter-sort{grid-column:1/-1}
++}
++@media(max-width:700px){
++  .recipe-owner{align-items:flex-start;flex-direction:column;padding:16px}
++  .author-footer{padding:18px 20px}.author-recipe{gap:12px}.author-recipe img{width:62px;height:62px}
++}
++@media(min-width:521px) and (max-width:800px){
++  .author-profile-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
++  .author-recipes{padding:26px 16px}.author-profile-data{padding:60px 16px 26px}
++  .author-recipes h3,.author-profile-data h2{font-size:22px}
++  .author-profile-data .author-card{padding:12px;gap:9px}.author-profile-data .author-avatar{width:42px;height:42px;font-size:18px}
++  .author-profile-data .author-name{font-size:14px}.author-profile-field{grid-template-columns:52px minmax(0,1fr);gap:8px;font-size:12px}
++  .author-recipes .recipe-filters{gap:10px}.author-recipes .recipe-filters input,.author-recipes .recipe-filters select{padding:10px 8px}
++  .author-recipes .recipe-filters button{padding:9px 8px;font-size:12px}
++  .author-recipe{padding:10px;gap:9px}.author-recipe img{width:50px;height:58px}.author-recipe-info strong{font-size:14px}
++}
++@media(max-width:520px){
++  .author-profile-layout{grid-template-columns:1fr}
++  .author-profile-data{order:-1;border-left:0;border-bottom:1px solid var(--line);padding:60px 20px 26px}
++  .author-profile-data h2{font-size:26px}.author-recipes{padding:24px 20px}.author-recipes h3{font-size:23px}
++}
+diff --git a/users/api.js b/users/api.js
+index c4d33f74da8a2cef128072164c1e78667a72d25a..939e2d7e4822e120d0322e61ca1682b573206b6c 100644
+--- a/users/api.js
++++ b/users/api.js
+@@ -1,5 +1,5 @@
+-import { editableData, normalizeUser } from './model.js?v=20261016-buttons2';
+-export { roleLabels } from './model.js?v=20261016-buttons2';
++import { editableData, normalizeUser } from './model.js?v=20261016-sorting1';
++export { roleLabels } from './model.js?v=20261016-sorting1';
+ const baseUrl = 'https://dummyjson.com';
+ export const timeoutMs = 15000;
+ 
