@@ -1,263 +1,897 @@
-diff --git a/index.html b/index.html
-index fb47edbc747cded63280f29f2ccb2a6b5d5cf8cc..4f89b17ec8b2f34b565790163eba5cee54c2f1f7 100644
---- a/index.html
-+++ b/index.html
-@@ -373,17 +373,17 @@ body.recipe-modal-open{overflow:hidden}
- #panel-task5 button:disabled{opacity:.55;cursor:wait}
- @media(max-width:600px){.recipe-photo-options{grid-template-columns:1fr}.recipe-photo{padding:12px}.recipe-toolbar .recipe-status{width:100%}}
- @media(max-width:600px){.recipe-editor{grid-template-columns:1fr}}
--.users-link{display:inline-flex;align-items:center;gap:7px;color:var(--lime);border:1px solid var(--line);border-radius:7px;padding:8px 12px;text-decoration:none;font-size:13px;white-space:nowrap}.users-link:hover{border-color:var(--lime)}.users-link:focus-visible{outline:3px solid var(--lime);outline-offset:4px}.top-links{display:flex;align-items:center;gap:20px}@media(max-width:700px){.top-links .edition{display:none}.users-link{font-size:12px;padding:7px 9px}}
-+.top-links{display:flex;align-items:center;gap:20px}
- </style>
+diff --git a/README.md b/README.md
+index ced3b4527c589f7c487f57ecaae417ffd251289e..ea8eaaaec0537c7ea90864afa3c4d912baec2cc9 100644
+--- a/README.md
++++ b/README.md
+@@ -1,96 +1,59 @@
+ # Pussybreakers — учебный сайт
  
--<link rel="stylesheet" href="recipes/reviews.css?v=20261016-buttons2">
--<link rel="stylesheet" href="recipes/cart.css?v=20261016-buttons2">
--<link rel="stylesheet" href="ui/common.css?v=20261016-buttons2">
-+<link rel="stylesheet" href="recipes/reviews.css?v=20261016-sorting1">
-+<link rel="stylesheet" href="recipes/catalog.css?v=20261016-sorting1">
-+<link rel="stylesheet" href="ui/common.css?v=20261016-sorting1">
- </head>
+-`index.html` — команда и задания 1–5, включая рецепты с учебными отзывами и профилями авторов. В шапке добавлена ссылка «Задание 6 · Люди» на новый каталог `users.html`. Прежние функции рецептов сохранены.
++Команда и задания 1–5 находятся в `index.html`. Отдельное задание 6 с каталогом, фильтрами и добавлением пользователей убрано. Старый адрес `users.html` перенаправляет к рецептам.
  
- <body>
+ ## Запуск
  
--<header><div class="top"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span style="color:var(--lime)">.</span></div><div class="top-links"><span class="edition">DEVELOPMENT TEAM / 04</span><a class="users-link" href="users.html">Задание 6 · Люди ↗</a></div></div>
-+<header><div class="top"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span style="color:var(--lime)">.</span></div><div class="top-links"><span class="edition">DEVELOPMENT TEAM / 04</span></div></div>
+-На этом Windows-компьютере достаточно открыть `START-SITE.cmd`: он запустит сервер в фоне и откроет каталог. Повторный запуск не создаёт второй сервер. Используется Python, уже установленный с Codex; на другом компьютере нужен Python 3 или VS Code Live Server. После перезагрузки компьютера запустите файл ещё раз.
++На этом компьютере откройте `START-SITE.cmd`: он запускает сервер и открывает рецепты. Повторный запуск использует тот же сервер. Локальный сервер `serve-site.py` запрещает кэширование, а при каждом запуске открывается свежий адрес страницы, чтобы браузер не показывал старый вариант.
  
- <nav class="tabs" role="tablist" aria-label="Команда и задания"><button class="tab" id="tab-home" role="tab" aria-selected="true" aria-controls="panel-home" data-view="home">Главная</button><button class="tab" id="tab-alisher" role="tab" aria-selected="false" aria-controls="panel-alisher" tabindex="-1" data-view="alisher">Алишер</button><button class="tab" id="tab-manas" role="tab" aria-selected="false" aria-controls="panel-manas" tabindex="-1" data-view="manas">Манас</button><button class="tab" id="tab-kuanysh" role="tab" aria-selected="false" aria-controls="panel-kuanysh" tabindex="-1" data-view="kuanysh">Куаныш</button><button class="tab" id="tab-khamzat" role="tab" aria-selected="false" aria-controls="panel-khamzat" tabindex="-1" data-view="khamzat">Хамзат</button><button class="tab" id="tab-task1" role="tab" aria-selected="false" aria-controls="panel-task1" tabindex="-1" data-view="task1">Задание 1</button><button class="tab" id="tab-task2" role="tab" aria-selected="false" aria-controls="panel-task2" tabindex="-1" data-view="task2">Задание 2</button>
+-Из папки сайта запустите:
++Для команды: скачайте весь репозиторий, откройте его папку в VS Code и запустите `index.html` через **Open with Live Server**. Альтернатива — Python 3:
  
-@@ -536,6 +536,8 @@ body.recipe-modal-open{overflow:hidden}
-   <h1>Книга рецептов <span>API</span></h1>
-   <p class="exercise-intro">Получаем рецепты с DummyJSON через GET, отправляем POST, PUT и DELETE. Изменения на тестовом сервере не сохраняются — результат отображается здесь, на странице.</p>
-   <div class="recipe-toolbar"><button type="button" class="action" id="recipe-load">GET · Загрузить рецепты</button><button type="button" class="action" id="recipe-add" aria-haspopup="dialog" aria-expanded="false" aria-controls="recipe-editor-panel">+ Добавить рецепт</button><span class="recipe-status" id="recipe-status" role="status" aria-live="polite">Нажмите «Загрузить рецепты»</span></div>
-+  <div id="recipe-filter-controls"></div>
-+  <p id="recipe-results" class="recipe-results" role="status"></p>
-   <dialog class="recipe-dialog recipe-editor-panel" id="recipe-editor-panel" aria-labelledby="recipe-form-title">
-     <div class="recipe-dialog-heading"><div><p class="eyebrow">Книга рецептов</p><h2 id="recipe-form-title">Добавить свой рецепт · POST</h2></div><button type="button" class="recipe-dialog-close" id="recipe-editor-close" aria-label="Закрыть форму">×</button></div>
-     <form id="recipe-form">
-@@ -969,5 +971,5 @@ document.getElementById('paragraph-container').appendChild(paragraph);
- </script>
+ ```sh
+ python -m http.server 8000
+ ```
  
+-На Windows также можно использовать `py -m http.server 8000`, на Linux/macOS — `python3 -m http.server 8000`. Откройте http://localhost:8000/ или http://localhost:8000/users.html. Подойдёт и VS Code Live Server. Нужен интернет для DummyJSON. Не открывайте `users.html` двойным щелчком через `file://`: браузер блокирует JS-модули.
++Затем откройте `http://localhost:8000/index.html#task5`. На Windows можно использовать `py`, на Linux/macOS — `python3`. Нужен интернет для DummyJSON. Обычное открытие HTML двойным щелчком не подходит для JS-модулей.
  
--<script src="ui/boot.js?v=20261016-buttons2" data-entry="recipes/app.js" data-status="recipe-status" defer></script>
-+<script src="ui/boot.js?v=20261016-sorting1" data-entry="recipes/app.js" data-status="recipe-status" defer></script>
- </body></html>
-diff --git a/recipes/app.js b/recipes/app.js
-index 034da1da4c7a6fc05276d8441932c5d387c03c94..932299f3bdf5b446cd0cf62856ad2736471515a2 100644
---- a/recipes/app.js
-+++ b/recipes/app.js
-@@ -1,5 +1,7 @@
--import { mountRecipeReviews, reviewCount } from './reviews.js?v=20261016-buttons2';
--import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-+import { mountRecipeReviews, reviewCount } from './reviews.js?v=20261016-sorting1';
-+import { confirmAction } from '../ui/confirm.js?v=20261016-sorting1';
-+import { createRecipeFilters, selectRecipes, recipeRating } from './filters.js?v=20261016-sorting1';
-+import { createAuthorProfiles } from './authors.js?v=20261016-sorting1';
- // Задание 5: CRUD-запросы к тестовому API DummyJSON.
- (() => {
-   const endpoint = 'https://dummyjson.com/recipes';
-@@ -36,6 +38,9 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-   let urlTimer;
-   let editorOpener;
-   let detailsOpener;
-+  const filters = createRecipeFilters(document.getElementById('recipe-filter-controls'), 'recipes', render);
-+  const profiles = createAuthorProfiles({ getRecipes: () => recipes, openRecipe: id => openDetails(id, detailsOpener) });
-+  let loaded = false;
+-Сайт написан на обычных HTML, CSS и JavaScript без сборки и библиотек. Node.js для запуска сайта не нужен. Рецепты теперь также используют JS-модули: открывайте обе страницы через HTTP-сервер, а не file://.
++## Рецепты и авторы
  
-   function photoStatus(message, error = false) {
-     photoMessage.textContent = message;
-@@ -135,11 +140,12 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-     document.getElementById('recipe-editor-close').disabled = value;
-     document.getElementById('recipe-cancel').disabled = value;
-     list.querySelectorAll('button').forEach(button => { button.disabled = value; });
-+    document.querySelectorAll('#recipe-filter-controls input, #recipe-filter-controls select, #recipe-filter-controls button').forEach(control => { control.disabled = value; });
-     submitButton.disabled = value || photoPending || photoError;
-   }
-   // showModal() затемняет фон и удерживает фокус внутри окна.
-   function syncModalScroll() {
--    document.body.classList.toggle('recipe-modal-open', editor.open || details.open);
-+    document.body.classList.toggle('recipe-modal-open', !!document.querySelector('.recipe-dialog[open]'));
-   }
-   function restoreEditorFocus() {
-     const target = editorOpener && editorOpener.isConnected ? editorOpener : addButton;
-@@ -174,6 +180,10 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-     detailsOpener = opener;
-     detailsTitle.textContent = recipe.name || 'Без названия';
-     detailsContent.replaceChildren();
-+    const owner = element('section', undefined, 'recipe-owner-container');
-+    owner.setAttribute('aria-label', 'Автор рецепта');
-+    detailsContent.append(owner);
-+    profiles.mount(owner, recipe);
-     const prep = Number(recipe.prepTimeMinutes) || 0;
-     const cook = Number(recipe.cookTimeMinutes) || 0;
-     const meta = ['ID: ' + recipe.id, 'Время: ' + (prep + cook) + ' мин.'];
-@@ -211,7 +221,7 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-     mountRecipeReviews(reviewsContainer, recipe, () => {
-       const summary = list.querySelector(`[data-reviews-for="${recipe.id}"]`);
-       if (summary) summary.textContent = `Отзывы (${reviewCount(recipe.id)}) →`;
--    }).then(heading => {
-+    }, profiles.open).then(heading => {
-       if (focusReviews && details.open && reviewsContainer.isConnected) {
-         reviewsContainer.scrollIntoView({block:'start'}); heading.focus({preventScroll:true});
-       }
-@@ -245,8 +255,12 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-   }
-   function render() {
-     list.replaceChildren();
--    if (!recipes.length) { list.append(element('p', 'Рецептов пока нет. Нажмите «Загрузить рецепты».', 'result')); return; }
--    for (const recipe of recipes) {
-+    filters.update(recipes);
-+    const visible = selectRecipes(recipes, filters.values());
-+    document.getElementById('recipe-results').textContent = loaded || recipes.length ? 'Показано: ' + visible.length + ' из ' + recipes.length : '';
-+    if (!recipes.length) { list.append(element('p', loaded ? 'Рецептов пока нет. Добавьте свой рецепт.' : 'Рецептов пока нет. Нажмите «Загрузить рецепты».', 'recipe-empty')); return; }
-+    if (!visible.length) { list.append(element('p', 'Ничего не найдено. Измените фильтр или нажмите «Сбросить».', 'recipe-empty')); return; }
-+    for (const recipe of visible) {
-       const card = element('article', undefined, 'recipe-item');
-       if (recipe.image) {
-         const img = document.createElement('img');
-@@ -269,7 +283,8 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-       heading.append(open);
-       info.append(heading);
-       const totalTime = (Number(recipe.prepTimeMinutes) || 0) + (Number(recipe.cookTimeMinutes) || 0);
--      info.append(element('p', 'ID: ' + recipe.id + ' · ' + totalTime + ' мин.'));
-+      const rating = recipeRating(recipe);
-+      info.append(element('p', [recipe.cuisine, totalTime + ' мин.', rating === null ? '' : '★ ' + rating, 'ID: ' + recipe.id].filter(Boolean).join(' · ')));
-       info.append(element('p', 'Ингредиенты: ' + (recipe.ingredients || []).join(', ')));
-       info.append(element('p', 'Нажмите, чтобы посмотреть приготовление →', 'recipe-open-hint'));
-       const reviewLink = element('button', `Отзывы (${reviewCount(recipe.id)}) →`, 'recipe-reviews-link');
-@@ -295,9 +310,10 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-     setSaving(true);
-     setStatus('GET · Загрузка...');
-     try {
--      const data = await request(endpoint + '?limit=12');
-+      const data = await request(endpoint + '?limit=0');
-       if (!Array.isArray(data.recipes)) throw new Error('Сервер вернул неверный список рецептов.');
-       recipes = data.recipes;
-+      loaded = true;
-       render();
-     } catch (error) { setStatus('GET · Ошибка: ' + error.message); }
-     finally { setSaving(false); }
-@@ -359,7 +375,7 @@ import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
-           method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(apiPayload)
-         });
-         if (id === null) {
--          recipes.unshift({...payload, id: nextLocalId++});
-+          recipes.unshift({...payload, id: nextLocalId++, userId: 0});
-           setStatus('HTTP 201 Created · Добавлено на страницу (Fake API не сохраняет данные)');
-         } else {
-           recipes = recipes.map(r => r.id === id ? {...r, ...payload} : r);
-diff --git a/recipes/reviews.css b/recipes/reviews.css
-index 03b74ec70cd7c0444766ac384809f4ea65bb3ff6..cf4425506718d656edb3058e213be93bb39fc27c 100644
---- a/recipes/reviews.css
-+++ b/recipes/reviews.css
-@@ -1,2 +1,3 @@
--.recipe-reviews-link{border:0;background:transparent;color:var(--lime);padding:8px 0;font-size:14px;text-align:left}.recipe-reviews-link:hover{text-decoration:underline}.recipe-reviews{border-top:1px solid var(--line);margin-top:32px;padding-top:26px;scroll-margin-top:24px}.reviews-heading{display:flex;align-items:center;gap:12px}.reviews-heading h3{font-size:23px;margin:0}.reviews-count{font-size:12px;padding:2px 9px;border-radius:20px;color:var(--lime);background:var(--highlight-bg)}.reviews-note{color:var(--muted);font-size:13px;line-height:1.65;margin:12px 0 20px}.reviews-status{font-size:13px;color:var(--lime);overflow-wrap:anywhere}.reviews-status:empty{display:none}.reviews-status[data-error=true]{color:#ffb4aa}.reviews-list{display:grid;gap:14px;margin:20px 0 28px}.recipe-review{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:17px 20px}.recipe-review-author{display:block;max-width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:0;border-radius:8px}.recipe-review-author:hover .user-name{color:var(--lime)}.recipe-review-author .user-card{display:flex;align-items:center;gap:12px;padding:0}.recipe-review-author .avatar{width:48px;height:48px;font-size:18px;border-radius:10px}.recipe-review-author .user-name{font-size:15px;font-weight:700}.recipe-review-author .user-handle{font-size:12px}.recipe-review-author .user-meta{font-size:10px;gap:6px;margin-top:4px}.recipe-review-author .role-badge{padding:1px 5px;font-size:10px}.recipe-review-author .user-info,.recipe-author-dialog .user-info{display:flex;flex-direction:column;min-width:0}.recipe-review-author .user-handle,.recipe-author-dialog .user-handle{color:var(--muted);overflow-wrap:anywhere}.recipe-review-author .user-name,.recipe-author-dialog .user-name{overflow-wrap:anywhere}.recipe-review-author .user-meta,.recipe-author-dialog .user-meta{display:flex;flex-wrap:wrap;align-items:center;color:var(--muted)}.recipe-review-author .role-badge,.recipe-author-dialog .role-badge{background:var(--surface);border:1px solid var(--line);color:var(--secondary);border-radius:4px}.recipe-review-author .avatar,.recipe-author-dialog .avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;background:var(--highlight-bg);color:var(--lime);font-weight:700}.recipe-review-author .avatar img,.recipe-author-dialog .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.review-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:15px 0 8px}.review-stars{letter-spacing:3px;color:var(--lime);font-size:16px}.review-source{font-size:11px;color:var(--muted)}.review-body{font-size:15px;color:var(--secondary);margin:0;white-space:pre-line;overflow-wrap:anywhere}.review-author-unavailable{color:var(--muted);font-size:13px}.review-form{border-top:1px solid var(--line);padding-top:25px}.review-form fieldset{padding:0;margin:0;border:0;min-width:0}.review-form legend{font-size:20px;font-weight:700;padding:0;margin-bottom:20px}.review-form-controls{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:15px;margin-bottom:16px}.review-form label{display:grid;gap:7px;font-size:13px;color:var(--secondary)}.review-form select,.review-form textarea{width:100%;min-width:0;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;padding:11px 12px}.review-form textarea{resize:vertical}.review-form :is(select,textarea):focus-visible{outline:3px solid var(--lime);outline-offset:3px}.recipe-author-dialog{max-width:940px;padding:0}.recipe-author-dialog .author-close{position:absolute;right:18px;top:18px;z-index:1}.recipe-author-dialog .profile-layout{display:grid;grid-template-columns:.9fr 1.1fr;min-height:480px}.recipe-author-dialog .profile-summary{padding:40px 30px;background:var(--card-start);border-right:1px solid var(--line);min-width:0}.recipe-author-dialog .profile-summary .avatar{width:140px;height:140px;border-radius:20px;font-size:44px;margin:26px 0}.recipe-author-dialog .profile-summary h2{font-size:30px;overflow-wrap:anywhere}.recipe-author-dialog .profile-username{color:var(--lime);font-size:14px;overflow-wrap:anywhere}.recipe-author-dialog .profile-description{color:var(--secondary);font-size:14px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}.recipe-author-dialog .profile-data{padding:70px 28px 28px;min-width:0}.recipe-author-dialog .user-card{display:flex;align-items:center;gap:15px;border:1px solid var(--line);background:var(--bg);border-radius:12px;min-height:132px;padding:20px;max-width:380px;margin-bottom:20px}.recipe-author-dialog .user-card .avatar{width:65px;height:65px;border-radius:12px;font-size:22px}.recipe-author-dialog .user-name{font-size:17px;font-weight:700}.recipe-author-dialog .user-handle{font-size:13px;margin-top:4px}.recipe-author-dialog .user-meta{gap:8px;font-size:10px;margin-top:10px}.recipe-author-dialog .role-badge{padding:2px 5px}.recipe-author-dialog .profile-fields{margin:0}.recipe-author-dialog .profile-field{display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.recipe-author-dialog dt{color:var(--muted)}.recipe-author-dialog dd{margin:0;overflow-wrap:anywhere}.recipe-author-dialog .form-status:empty,.recipe-author-dialog .profile-actions:empty{display:none}.author-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;border-top:1px solid var(--line);padding:20px 28px}.author-catalog{color:var(--lime);font-size:13px;text-underline-offset:4px}.author-catalog:focus-visible{outline:3px solid var(--lime);outline-offset:4px}@media(max-width:650px){.recipe-author-dialog .profile-layout{grid-template-columns:1fr}.recipe-author-dialog .profile-summary{border-right:0;border-bottom:1px solid var(--line);padding:26px}.recipe-author-dialog .profile-data{padding:25px}.recipe-author-dialog .profile-summary .avatar{width:100px;height:100px}.recipe-author-dialog .user-card{max-width:none}.author-footer{padding:18px 24px}.recipe-review{padding:16px}.review-form-controls{grid-template-columns:minmax(0,1fr)}.reviews-heading h3{font-size:21px}}
-+.recipe-reviews-link{border:0;background:transparent;color:var(--lime);padding:8px 0;font-size:14px;text-align:left}.recipe-reviews-link:hover{text-decoration:underline}.recipe-reviews{border-top:1px solid var(--line);margin-top:32px;padding-top:26px;scroll-margin-top:24px}.reviews-heading{display:flex;align-items:center;gap:12px}.reviews-heading h3{font-size:23px;margin:0}.reviews-count{font-size:12px;padding:2px 9px;border-radius:20px;color:var(--lime);background:var(--highlight-bg)}.reviews-note{color:var(--muted);font-size:13px;line-height:1.65;margin:12px 0 20px}.reviews-status{font-size:13px;color:var(--lime);overflow-wrap:anywhere}.reviews-status:empty{display:none}.reviews-status[data-error=true]{color:#ffb4aa}.reviews-list{display:grid;gap:14px;margin:20px 0 28px}.recipe-review{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:17px 20px}.recipe-review-author{display:block;max-width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:0;border-radius:8px}.recipe-review-author:hover .user-name{color:var(--lime)}.recipe-review-author .user-card{display:flex;align-items:center;gap:12px;padding:0}.recipe-review-author .avatar{width:48px;height:48px;font-size:18px;border-radius:10px}.recipe-review-author .user-name{font-size:15px;font-weight:700}.recipe-review-author .user-handle{font-size:12px}.recipe-review-author .user-meta{font-size:10px;gap:6px;margin-top:4px}.recipe-review-author .role-badge{padding:1px 5px;font-size:10px}.recipe-review-author .user-info,.recipe-author-dialog .user-info{display:flex;flex-direction:column;min-width:0}.recipe-review-author .user-handle,.recipe-author-dialog .user-handle{color:var(--muted);overflow-wrap:anywhere}.recipe-review-author .user-name,.recipe-author-dialog .user-name{overflow-wrap:anywhere}.recipe-review-author .user-meta,.recipe-author-dialog .user-meta{display:flex;flex-wrap:wrap;align-items:center;color:var(--muted)}.recipe-review-author .role-badge,.recipe-author-dialog .role-badge{background:var(--surface);border:1px solid var(--line);color:var(--secondary);border-radius:4px}.recipe-review-author .avatar,.recipe-author-dialog .avatar{display:grid;place-items:center;position:relative;overflow:hidden;flex:none;background:var(--highlight-bg);color:var(--lime);font-weight:700}.recipe-review-author .avatar img,.recipe-author-dialog .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.review-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:15px 0 8px}.review-stars{letter-spacing:3px;color:var(--lime);font-size:16px}.review-source{font-size:11px;color:var(--muted)}.review-body{font-size:15px;color:var(--secondary);margin:0;white-space:pre-line;overflow-wrap:anywhere}.review-author-unavailable{color:var(--muted);font-size:13px}.review-form{border-top:1px solid var(--line);padding-top:25px}.review-form fieldset{padding:0;margin:0;border:0;min-width:0}.review-form legend{font-size:20px;font-weight:700;padding:0;margin-bottom:20px}.review-form-controls{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:15px;margin-bottom:16px}.review-form label{display:grid;gap:7px;font-size:13px;color:var(--secondary)}.review-form select,.review-form textarea{width:100%;min-width:0;border:1px solid var(--demo-border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;padding:11px 12px}.review-form textarea{resize:vertical}.review-form :is(select,textarea):focus-visible{outline:3px solid var(--lime);outline-offset:3px}
- .review-field{display:grid;gap:7px}
-+@media(max-width:650px){.recipe-review{padding:16px}.review-form-controls{grid-template-columns:minmax(0,1fr)}.reviews-heading h3{font-size:21px}}
-diff --git a/recipes/reviews.js b/recipes/reviews.js
-index 999978ef746dbd6709208562184e471d88f0b621..69c4ff5298b8eb2b95f0d8a3e429a478a075202a 100644
---- a/recipes/reviews.js
-+++ b/recipes/reviews.js
-@@ -1,48 +1,11 @@
--import { getUsers } from '../users/api.js?v=20261016-buttons2';
--import { fullName } from '../users/model.js?v=20261016-buttons2';
--import { element, showProfile, userCard } from '../users/details.js?v=20261016-buttons2';
--import { ReviewStore } from './review-store.js?v=20261016-buttons2';
-+import { fullName } from '../users/model.js?v=20261016-sorting1';
-+import { element, userCard, loadAuthors } from './authors.js?v=20261016-sorting1';
-+import { ReviewStore } from './review-store.js?v=20261016-sorting1';
+-Для запуска нужны все папки, включая `ui/`. Скрипт `ui/boot.js` запускает модуль страницы и показывает понятную ошибку с кнопкой перезагрузки, если файл не загрузился. Ссылки на JS/CSS имеют общий номер версии, чтобы браузер не смешивал старые и новые файлы. Корзина подгружается отдельно: её ошибка не отключает каталог.
++- «Загрузить рецепты» получает полный каталог через `GET /recipes?limit=0`.
++- Поиск работает по названию и ингредиентам. Дополнительные фильтры — кухня и сложность. Можно комбинировать условия и сбрасывать их. В общем списке и в профиле автора есть независимая сортировка по названию, общему времени приготовления и рейтингу в обоих направлениях. «По умолчанию» и «Сбросить» возвращают исходный порядок; блюда без времени или рейтинга идут в конце соответствующей сортировки.
++- В выбранном рецепте видны фото, ингредиенты, шаги и кнопка автора.
++- Автор определяется по `recipe.userId`, а не по автору отзыва. Его профиль показывает только рецепты с этим `userId`, включая блюда вне текущего фильтра основного списка.
++- Слева в профиле — блюда автора, поиск и категория (завтрак, обед, ужин и другие значения mealType). Справа сохранены имя, ник, роль, ID, почта, телефон и описание пользователя. Нажатие на блюдо открывает его рецепт. Закрытие профиля возвращает к исходному блюду.
++- Прежней учебной корзины в профиле больше нет.
++- Новые рецепты на текущей странице относятся к локальному автору «Вы». Это не авторизация и не создание пользователя на сервере.
++- Создание, изменение и удаление рецептов сохранены. Запросы ограничены 15 секундами; во время операции повторная отправка блокируется. Удаление подтверждается внутри страницы.
  
- const reviews = new ReviewStore();
--let usersPromise;
--let authorDialog;
--let authorOpener;
- export const reviewCount = recipeId => reviews.get(recipeId).length;
+-Код задания 5 находится в `recipes/app.js`. Запросы ограничены 15 секундами; после успеха или ошибки кнопки разблокируются. Повторное нажатие во время операции не отправляет второй запрос. Удаление в заданиях 5 и 6 подтверждается в окне внутри сайта (`ui/confirm.js`), которое не блокирует встроенный браузер системным `confirm()`.
++DummyJSON имитирует POST/PUT/DELETE и не сохраняет изменения. После перезагрузки возвращаются исходные данные. Локальные рецепты имеют ID от 100000: их последующие изменения выполняются в памяти без запросов к несуществующим записям сервера.
  
--function loadUsers() {
--  if (!usersPromise) usersPromise = getUsers().catch(error => { usersPromise = null; throw error; });
--  return usersPromise;
--}
+-## Отзывы к рецептам и профили авторов
++Учебные отзывы сохранены и явно обозначены: API рецептов не содержит их текстов. Клик по автору отзыва тоже открывает его профиль с собственными рецептами; если таких рецептов нет, показан пустой список. Отзывы, созданные на странице, исчезают после перезагрузки.
+ 
+-В карточках блюд есть кнопка «Отзывы», а в окне рецепта под ингредиентами и шагами — отзывы с оценкой и карточкой автора. Нажатие на имя или аватар открывает профиль над рецептом; закрытие возвращает к тому же отзыву. Ссылка «Открыть в каталоге людей» ведёт на `users.html?user=ID` и автоматически открывает нужный профиль.
++## Файлы
+ 
+-В DummyJSON у рецептов есть `rating` и `reviewCount`, но API не предоставляет тексты отзывов к рецептам: https://dummyjson.com/docs/recipes. `/comments` относится к публикациям (`postId`), а не к блюдам. Поэтому здесь **явно помеченные учебные тексты**, связанные с тестовыми профилями через `userId`. Примеры для первых 12 блюд находятся в `recipes/review-store.js`; число показанных примеров не выдаётся за серверный `reviewCount`.
++- `recipes/app.js` — список, рецепт, форма и CRUD.
++- `recipes/filters.js` — общие правила фильтрации и независимые панели фильтров.
++- `recipes/authors.js`, `recipes/catalog.css` — профиль автора, список его блюд и оформление.
++- `recipes/reviews.js`, `recipes/review-store.js`, `recipes/reviews.css` — учебные отзывы.
++- `users/api.js`, `users/model.js` — получение и обработка данных авторов; отдельной страницы управления людьми нет.
++- `ui/boot.js`, `ui/confirm.js`, `ui/common.css` — запуск модулей, сообщения об ошибке и подтверждение удаления.
+ 
+-Можно добавить учебный отзыв, выбрав тестового автора, оценку и текст. Это локальное действие без POST: сервис не имеет API отзывов к рецептам. Отзыв сохраняется при закрытии/открытии блюда и исчезает после перезагрузки. Форма не является авторизацией. Новые рецепты начинают без отзывов. Профили загружаются один раз с повторной попыткой при ошибке; их отображает та же `showProfile()`/`userCard()` из каталога. Модуль `recipes/reviews.js` соединяет отзывы с интерфейсом, `recipes/reviews.css` задаёт адаптивное оформление.
++## Проверка и отправка команде
+ 
+-## Корзина блюд в профиле
 -
--function openAuthor(userId, users, source) {
--  if (!authorDialog) {
--    authorDialog = element('dialog', 'recipe-dialog recipe-author-dialog');
--    authorDialog.id = 'profile-dialog'; authorDialog.setAttribute('aria-labelledby', 'profile-title');
--    const close = element('button', 'recipe-dialog-close author-close', '×');
--    close.type = 'button'; close.setAttribute('aria-label', 'Закрыть профиль автора');
--    close.addEventListener('click', () => authorDialog.close());
--    const container = element('div'); container.id = 'profile-container';
--    const footer = element('div', 'author-footer');
--    const back = element('button', 'recipe-secondary', '← Вернуться к рецепту'); back.type = 'button';
--    back.addEventListener('click', () => authorDialog.close());
--    const catalog = element('a', 'author-catalog', 'Открыть в каталоге людей ↗'); catalog.id = 'author-catalog-link';
--    footer.append(back, catalog); authorDialog.append(close, container, footer); document.body.append(authorDialog);
--    authorDialog.addEventListener('close', () => {
--      if (authorOpener?.isConnected && document.getElementById('recipe-details').open) authorOpener.focus({ preventScroll: true });
--    });
--    document.getElementById('recipe-details').addEventListener('close', () => { if (authorDialog.open) authorDialog.close(); });
--    window.addEventListener('hashchange', () => { if (authorDialog.open) authorDialog.close(); });
+-Слева в профиле автоматически показывается заполненная корзина: 2–4 блюда с фотографиями и количеством порций. Справа — карточка человека и его данные. Это работает и при открытии автора отзыва, и в каталоге людей. Ничего выбирать или добавлять вручную не нужно. При ошибке загрузки доступна повторная попытка.
+-
+-Это явно помеченные **учебные примеры**, автоматически составленные из рецептов. Набор зависит от `user.id`: у разных людей разные сочетания, а один профиль получает тот же набор при повторном открытии, перезагрузке и переходе между `index.html` и `users.html`, пока состав каталога рецептов не изменился. Нет localStorage, sessionStorage или БД.
+-
+-DummyJSON Carts содержит **товары**, а не рецепты: https://dummyjson.com/docs/carts. Поэтому здесь отдельная учебная корзина блюд, а не подмена товаров по совпавшим ID. Каталог блюд получает `GET /recipes?limit=0&select=name,image` с таймаутом 15 секунд. У рецептов нет цены: интерфейс считает блюда и порции, не придумывая стоимость. POST/PUT/DELETE для корзины не отправляются. Общие модули: `recipes/cart-store.js`, `recipes/cart.js`, `recipes/cart.css`.
+-
+-## Задание 6 — каталог людей
+-
+-- Горизонтальные карточки с аватаром, именем, ником, ролью и ID.
+-- Большой профиль из двух половин: слева корзина блюд, справа та же карточка и подробные поля. На телефоне колонки располагаются друг под другом.
+-- Поиск по имени, фамилии и нику, сортировка имени в обе стороны, фильтр ролей: пользователь, модератор, админ.
+-- Создание, редактирование всех полей и роли, удаление с подтверждением.
+-- Проверка данных и уникальности ника без учёта регистра. Повторные запросы и закрытие формы блокируются на время операции.
+-- Ошибка не удаляет данные и не закрывает форму; начальную загрузку можно повторить. Фото при ошибке заменяется инициалами.
+-- Управление с клавиатуры, Escape и возврат фокуса после закрытия профиля/формы и удаления.
+-- Индикатор последнего HTTP-метода и кода ответа; для новых локальных профилей выводится «Локально».
+-
+-### API и хранение
+-
+-Документация: https://dummyjson.com/docs/users
+-
+-| Действие | Запрос |
+-| --- | --- |
+-| Чтение | `GET /users?limit=0&select=firstName,lastName,username,image,email,phone,company,role` |
+-| Создание | `POST /users/add` |
+-| Изменение исходного человека | `PUT /users/{id}` |
+-| Удаление исходного человека | `DELETE /users/{id}` |
+-
+-Базовый адрес — `https://dummyjson.com`, таймаут — 15 секунд. Проверяется `response.ok`; для DELETE дополнительно требуется `isDeleted === true`.
+-
+-DummyJSON имитирует изменения, но не сохраняет их. После успеха изменяется единственный массив `app.users`, повторного GET нет. Перезагрузка возвращает исходные данные. Новым людям выдаются отрицательные ID −1, −2 и далее, независимо от ID в ответе POST. PUT/DELETE для этих записей не отправляются: они изменяются локально. Каталог не использует localStorage или БД. Существующее сохранение темы старых заданий остаётся в `index.html`.
+-
+-Описание исходного человека собирается из должности, компании и отдела. В форме это редактируемый текст `description`. Пароли и банковские данные не загружаются в интерфейс и не включаются в запросы. Данные выводятся через `textContent` и `value`.
+-
+-### Файлы
+-
+-| Файл | Назначение |
+-| --- | --- |
+-| `users.html`, `users/styles.css` | Страница и адаптивное оформление |
+-| `users/app.js` | Общий массив, состояние, диалоги и подключение модулей |
+-| `users/api.js` | HTTP-запросы, ошибки и таймаут |
+-| `users/model.js` | Нормализация, проверка, поиск, фильтр и сортировка |
+-| `users/list.js` | Список карточек |
+-| `users/details.js` | Общая функция `userCard(user)` и профиль |
+-| `users/form.js` | Поля и общая проверка форм |
+-| `users/create.js` | `initCreate(app)` — добавление |
+-| `users/edit.js` | `initEdit(app)` — изменение |
+-| `users/delete.js` | `initDelete(app)` — удаление |
+-
+-Поток данных для объяснения: **fetch → JSON → app.users → filter → sort → DOM**. Профили и формы открываются через `<dialog>.showModal()`.
+-
+-## Проверка
+-
+-Node.js 22.7+; установка пакетов не нужна:
++Для тестов нужен Node.js 22.7+, установка пакетов не требуется:
+ 
+ ```sh
+ node --test tests/*.test.mjs
+ ```
+ 
+-Автотесты API и правил данных подменяют fetch, не изменяя DummyJSON. Ручной сценарий: загрузить → найти по нику → сменить сортировку → проверить три роли → открыть карточку мышью и Enter → закрыть Escape → создать двух людей → изменить исходного и нового → отменить удаление → удалить обоих → перезагрузить. Проверяйте также отключённый интернет, ошибки запросов, узкий экран и сохранение фильтра после изменения роли.
++Коммитить нужно все изменения, включая новые файлы и удаления:
++
++```sh
++git add .
++git commit -m "Recipe filters and author profiles"
++git push
++```
+ 
+-## Перенос в существующий репозиторий
++Команда обновляет свои копии командой `git pull`. Для GitHub Pages загружайте весь проект: одного `index.html` недостаточно.
+ 
+-Скопируйте `index.html`, `users.html`, папки `users/`, `recipes/`, `ui/`, `tests/`, а также `README.md` и `package.json` из этой версии в корень вашего репозитория. Новая страница использует относительные пути и работает на GitHub Pages. Все файлы каталога должны быть загружены вместе; одного `users.html` недостаточно.
++Документация API: https://dummyjson.com/docs/recipes и https://dummyjson.com/docs/users.
+diff --git a/recipes/cart-store.js b/recipes/cart-store.js
+deleted file mode 100644
+index 2da1b9a51cafbbe436eb714f66bd7f058e7c5089..0000000000000000000000000000000000000000
+--- a/recipes/cart-store.js
++++ /dev/null
+@@ -1,41 +0,0 @@
+-// Автоматический учебный набор. Одинаковый ID даёт одну корзину на обеих страницах.
+-export function createRecipeBasket(userId, recipes) {
+-  if (!Number.isSafeInteger(userId) || userId === 0) throw new Error('Не найден владелец корзины.');
+-  const unique = new Map();
+-  for (const recipe of recipes) {
+-    if (Number.isSafeInteger(recipe?.id) && recipe.id > 0 && typeof recipe.name === 'string' && recipe.name.trim()) unique.set(recipe.id, recipe);
 -  }
--  authorOpener = source;
--  document.getElementById('author-catalog-link').href = `users.html?user=${userId}`;
--  const profileApp = {
--    users, ready: true, busy: false,
--    openDialog(dialog, initialFocus) { dialog.showModal(); dialog.scrollTop = 0; initialFocus.focus({ preventScroll: true }); }
--  };
--  showProfile(profileApp, userId, source, { readOnly: true });
+-  const catalog = [...unique.values()].sort((a, b) => a.id - b.id);
+-  if (!catalog.length) return [];
+-  const seed = Math.abs(userId);
+-  const size = Math.min(2 + seed % 3, catalog.length);
+-  const start = ((seed - 1) % catalog.length * 7) % catalog.length;
+-  return Array.from({ length: size }, (_, index) => {
+-    const recipe = catalog[(start + index) % catalog.length];
+-    return { id: recipe.id, name: recipe.name.trim(), image: typeof recipe.image === 'string' ? recipe.image : '', quantity: 1 + (seed + index) % 2 };
+-  });
 -}
 -
--export async function mountRecipeReviews(container, recipe, onChange = () => {}) {
-+export async function mountRecipeReviews(container, recipe, onChange = () => {}, onAuthor = () => {}) {
-   const headingRow = element('div', 'reviews-heading');
-   const heading = element('h3', '', 'Отзывы о блюде'); heading.id = `reviews-title-${recipe.id}`; heading.tabIndex = -1;
-   const count = element('span', 'reviews-count');
-@@ -80,8 +43,8 @@ export async function mountRecipeReviews(container, recipe, onChange = () => {})
-       const user = users.find(person => person.id === review.userId);
-       if (user) {
-         const button = element('button', 'recipe-review-author'); button.type = 'button';
--        button.setAttribute('aria-label', `Открыть профиль автора: ${fullName(user)}`); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'profile-dialog');
--        button.append(userCard(user)); button.addEventListener('click', () => openAuthor(user.id, users, button)); item.append(button);
-+        button.setAttribute('aria-label', `Открыть профиль автора отзыва: ${fullName(user)}`); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'recipe-author-dialog');
-+        button.append(userCard(user)); button.addEventListener('click', () => onAuthor(user, button)); item.append(button);
-       } else item.append(element('p', 'review-author-unavailable', `Автор #${review.userId} · профиль пока недоступен`));
-       const meta = element('div', 'review-meta');
-       const stars = element('span', 'review-stars', '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)); stars.setAttribute('aria-label', `Оценка ${review.rating} из 5`);
-@@ -95,7 +58,7 @@ export async function mountRecipeReviews(container, recipe, onChange = () => {})
-   async function load() {
-     retry.hidden = true; fieldset.disabled = true; status.textContent = 'Загружаем профили авторов…'; status.dataset.error = 'false';
-     try {
--      users = await loadUsers();
-+      users = await loadAuthors();
-       if (!container.isConnected) return;
-       const placeholder = element('option', '', 'Выберите автора'); placeholder.value = ''; author.replaceChildren(placeholder);
-       for (const user of [...users].sort((a, b) => fullName(a).localeCompare(fullName(b)))) {
-diff --git a/ui/boot.js b/ui/boot.js
-index a3264c7c3abd8e029f1cc68a61ceba54bccef727..dbec80f648497b80acbd27983c36870a8c9e9127 100644
---- a/ui/boot.js
-+++ b/ui/boot.js
-@@ -5,15 +5,13 @@
-     const status = document.getElementById(script.dataset.status);
-     if (status) {
-       status.dataset.error = 'true';
--      status.textContent = 'Для заданий 5 и 6 запустите START-SITE.cmd из папки сайта. Он откроет сайт через локальный сервер.';
-+      status.textContent = 'Для рецептов запустите START-SITE.cmd из папки сайта. Он откроет сайт через локальный сервер.';
-       const link = document.createElement('a');
-       link.className = 'button secondary recipe-secondary';
-       link.textContent = 'Открыть сайт, если сервер уже запущен';
--      link.href = 'http://127.0.0.1:8000/' + (script.dataset.entry.startsWith('users/') ? 'users.html' : 'index.html#task5');
-+      link.href = 'http://127.0.0.1:8000/index.html#task5';
-       status.after(link);
+-let catalogRequest;
+-export function getRecipeChoices() {
+-  if (!catalogRequest) {
+-    catalogRequest = (async () => {
+-      const controller = new AbortController();
+-      const timer = setTimeout(() => controller.abort(), 15000);
+-      try {
+-        const response = await fetch('https://dummyjson.com/recipes?limit=0&select=name,image', { signal: controller.signal });
+-        if (!response.ok) throw new Error(`Не удалось загрузить блюда · GET ${response.status}.`);
+-        const data = await response.json();
+-        if (!Array.isArray(data.recipes)) throw new Error('Сервис вернул неверный список блюд.');
+-        return data.recipes.filter(recipe => Number.isSafeInteger(recipe.id) && recipe.id > 0 && typeof recipe.name === 'string' && recipe.name.trim());
+-      } catch (error) {
+-        catalogRequest = null;
+-        if (error.name === 'AbortError') throw new Error('Блюда не загрузились за 15 секунд. Попробуйте ещё раз.');
+-        if (error instanceof TypeError) throw new Error('Нет связи с сервисом блюд. Проверьте интернет.');
+-        throw error;
+-      } finally { clearTimeout(timer); }
+-    })();
+-  }
+-  return catalogRequest;
+-}
+-
+diff --git a/recipes/cart.css b/recipes/cart.css
+deleted file mode 100644
+index 2fb9a8ee452f45f42416d3ab30cfd926f291f61d..0000000000000000000000000000000000000000
+--- a/recipes/cart.css
++++ /dev/null
+@@ -1,23 +0,0 @@
+-.profile-layout,.recipe-author-dialog .profile-layout{grid-template-columns:1.1fr 1fr}
+-.profile-basket{padding:38px 28px 28px;background:var(--bg);border-right:1px solid var(--line);min-width:0}
+-.basket-heading{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+-.basket-heading h2{font-size:27px;letter-spacing:-.8px;line-height:1.2;margin:0}
+-.basket-count{display:grid;place-items:center;min-width:30px;height:30px;padding:0 8px;border-radius:50px;background:var(--lime);color:#101213;font-size:13px;font-weight:700}
+-.basket-intro,.basket-note{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 22px}
+-.basket-note{margin:19px 0 0;font-size:11px}
+-.basket-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+-.basket-empty{min-height:180px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center;padding:20px;font-size:12px}
+-.basket-empty strong{font-size:17px;color:var(--text)}.basket-empty-icon{font-size:30px;color:var(--lime)}
+-.basket-item{display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--surface);min-width:0}
+-.basket-photo{position:relative;display:grid;place-items:center;width:64px;height:70px;flex:none;border-radius:8px;background:var(--bg);overflow:hidden;font-size:26px}
+-.basket-photo img{position:absolute;width:100%;height:100%;object-fit:cover;inset:0}
+-.basket-item-info{min-width:0;flex:1}.basket-item h3{font-size:14px;line-height:1.4;margin:0 0 10px;overflow-wrap:anywhere}
+-.basket-quantity{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin:0}
+-.profile-basket .cart-button{border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--text);padding:8px 12px;min-height:38px;font:inherit;font-size:12px;cursor:pointer}
+-.profile-basket .cart-button:hover{border-color:var(--lime)}.profile-basket .cart-button:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+-.profile-basket .cart-button:disabled{opacity:.4;cursor:default}
+-.basket-total{display:flex;justify-content:flex-end;border-top:1px solid var(--line);padding-top:13px;margin:17px 0 0;font-size:13px;color:var(--text)}
+-.basket-status{font-size:12px;line-height:1.6;color:var(--lime);overflow-wrap:anywhere;margin:14px 0 0}.basket-status[data-error=true]{color:#f39a90}.basket-status:empty{display:none}
+-.profile-data #profile-title{font-size:23px;overflow-wrap:anywhere;margin:0 0 18px;line-height:1.25}
+-.profile-data .eyebrow{margin-bottom:10px}.profile-data,.recipe-author-dialog .profile-data{padding-top:38px}
+-@media(max-width:700px){.profile-layout,.recipe-author-dialog .profile-layout{grid-template-columns:minmax(0,1fr)}.profile-basket{border-right:0;border-bottom:1px solid var(--line);padding:32px 20px 24px}.basket-heading h2{font-size:25px}.profile-basket>.eyebrow{padding-right:28px;overflow-wrap:anywhere}.profile-data,.recipe-author-dialog .profile-data{padding:26px 20px}.basket-item{padding:12px}.basket-photo{width:56px;height:64px}.basket-controls{gap:6px}.profile-basket .cart-button{min-height:40px}.profile-basket .cart-remove{margin-left:0}}
+diff --git a/recipes/cart.js b/recipes/cart.js
+deleted file mode 100644
+index 6394ed62c02c78459b8c8b22f199a47c48413d4f..0000000000000000000000000000000000000000
+--- a/recipes/cart.js
++++ /dev/null
+@@ -1,62 +0,0 @@
+-import { createRecipeBasket, getRecipeChoices } from './cart-store.js?v=20261016-buttons2';
+-import { httpUrl } from '../users/model.js?v=20261016-buttons2';
+-
+-function el(tag, className, text) {
+-  const node = document.createElement(tag);
+-  if (className) node.className = className;
+-  if (text !== undefined) node.textContent = text;
+-  return node;
+-}
+-
+-export function recipeBasket(user, app) {
+-  const section = el('section', 'profile-basket');
+-  section.setAttribute('aria-labelledby', 'basket-title');
+-  const heading = el('div', 'basket-heading');
+-  const title = el('h2', '', 'Корзина блюд'); title.id = 'basket-title'; title.tabIndex = -1;
+-  const count = el('span', 'basket-count', '—'); count.setAttribute('aria-label', 'Всего порций');
+-  heading.append(title, count);
+-  const list = el('ul', 'basket-list');
+-  const total = el('p', 'basket-total'); total.hidden = true;
+-  const status = el('p', 'basket-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+-  const retry = el('button', 'cart-button', 'Повторить загрузку'); retry.type = 'button'; retry.hidden = true;
+-  retry.addEventListener('click', loadBasket);
+-  let loading = false;
+-  section.append(el('p', 'eyebrow', 'Выбор · @' + user.username), heading,
+-    el('p', 'basket-intro', 'Выбранные блюда пользователя.'), list, total, status, retry,
+-    el('p', 'basket-note', 'Учебный пример: корзина заполнена автоматически.'));
+-
+-  function draw(items) {
+-    const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+-    count.textContent = String(quantity);
+-    total.textContent = `Блюд: ${items.length} · Порций: ${quantity}`;
+-    total.hidden = !items.length;
+-    list.replaceChildren();
+-    if (!items.length) list.append(el('li', 'basket-empty', 'Нет доступных блюд.'));
+-    for (const item of items) {
+-      const row = el('li', 'basket-item'); row.dataset.recipeId = String(item.id);
+-      const photo = el('span', 'basket-photo', '🍽'); photo.setAttribute('aria-hidden', 'true');
+-      if (httpUrl(item.image)) {
+-        const image = el('img'); image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+-        image.addEventListener('error', () => image.remove(), { once: true }); image.src = item.image; photo.append(image);
+-      }
+-      const info = el('div', 'basket-item-info');
+-      info.append(el('h3', '', item.name), el('p', 'basket-quantity', `Количество: ${item.quantity} порц.`));
+-      row.append(photo, info); list.append(row);
+-    }
+-  }
+-
+-  async function loadBasket() {
+-    if (loading || app.busy || !app.ready) return;
+-    loading = true; retry.hidden = true; section.setAttribute('aria-busy', 'true');
+-    status.textContent = 'Загружаем корзину…'; status.dataset.error = 'false';
+-    try {
+-      const recipes = await getRecipeChoices();
+-      draw(createRecipeBasket(user.id, recipes));
+-      status.textContent = '';
+-    } catch (error) {
+-      status.textContent = error.message; status.dataset.error = 'true'; retry.hidden = false;
+-    } finally { loading = false; section.setAttribute('aria-busy', 'false'); }
+-  }
+-  loadBasket();
+-  return section;
+-}
+diff --git a/serve-site.py b/serve-site.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..925f7ed26af9a8ce764fa287549607d181610b16
+--- /dev/null
++++ b/serve-site.py
+@@ -0,0 +1,23 @@
++"""Serve this project's files locally without retaining outdated browser copies."""
++import argparse
++from functools import partial
++from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
++from pathlib import Path
++
++
++class SiteHandler(SimpleHTTPRequestHandler):
++    def end_headers(self):
++        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
++        self.send_header('Pragma', 'no-cache')
++        self.send_header('Expires', '0')
++        self.send_header('X-Pssybreakers-Server', 'no-cache-v1')
++        super().end_headers()
++
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--port', type=int, default=8000)
++    args = parser.parse_args()
++    handler = partial(SiteHandler, directory=str(Path(__file__).resolve().parent))
++    with ThreadingHTTPServer(('127.0.0.1', args.port), handler) as server:
++        server.serve_forever()
+diff --git a/start-site.ps1 b/start-site.ps1
+index 79dccd1697074d8fce75d01c3600518b813a4645..4f8b0136b0a6befa1486984c400f59aa81985161 100644
+--- a/start-site.ps1
++++ b/start-site.ps1
+@@ -24,8 +24,14 @@ if (Test-Path -LiteralPath $taskStatePath) {
+         $taskExisting = Get-Process -Id $taskState.processId -ErrorAction Stop
+         $taskSavedStart = [DateTime]$taskState.startedAt
+         if ($taskExisting.StartTime.ToUniversalTime().Ticks -eq $taskSavedStart.ToUniversalTime().Ticks -and $taskState.root -eq $taskSiteRoot) {
+-            $taskResponse = Invoke-WebRequest -UseBasicParsing -Uri ('http://127.0.0.1:' + $taskState.port + '/users.html') -TimeoutSec 3
+-            if ($taskResponse.StatusCode -eq 200 -and $taskResponse.Content.Contains('users/app.js')) { $taskPort = [int]$taskState.port }
++            if ($taskState.serverVersion -eq 'no-cache-v1') {
++                $taskResponse = Invoke-WebRequest -UseBasicParsing -Uri ('http://127.0.0.1:' + $taskState.port + '/index.html') -TimeoutSec 3
++                if ($taskResponse.StatusCode -eq 200 -and $taskResponse.Content.Contains('recipes/app.js') -and $taskResponse.Headers['X-Pssybreakers-Server'] -eq 'no-cache-v1') { $taskPort = [int]$taskState.port }
++            } else {
++                # Upgrade only our own recorded process for this exact project.
++                Stop-Process -Id $taskExisting.Id -ErrorAction Stop
++                $taskExisting.WaitForExit(3000) | Out-Null
++            }
+         }
+     } catch { }
+ }
+@@ -38,21 +44,21 @@ if ($null -eq $taskPort) {
+         finally { $taskProbe.Stop() }
      }
--    document.getElementById('user-count')?.replaceChildren('Откройте сайт через START-SITE.cmd');
--    document.getElementById('user-list')?.setAttribute('aria-busy', 'false');
-     document.querySelectorAll('#recipe-load, #recipe-add').forEach(button => { button.disabled = true; });
-     return;
-   }
-@@ -30,7 +28,5 @@
-     retry.type = 'button'; retry.className = 'button secondary recipe-secondary'; retry.textContent = 'Перезагрузить страницу';
-     retry.addEventListener('click', () => location.reload());
-     status.after(retry);
--    document.getElementById('user-count')?.replaceChildren('Каталог не запущен');
--    document.getElementById('user-list')?.setAttribute('aria-busy', 'false');
-   });
- })();
+     if ($null -eq $taskPort) { throw 'Ports 8000-8010 are busy. Close another local server and try again.' }
+-    $taskServer = Start-Process -FilePath $taskPython -ArgumentList @('-m', 'http.server', [string]$taskPort, '--bind', '127.0.0.1') -WorkingDirectory $taskSiteRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskStateDir 'server.log') -RedirectStandardError (Join-Path $taskStateDir 'server-error.log')
++    $taskServer = Start-Process -FilePath $taskPython -ArgumentList @('serve-site.py', '--port', [string]$taskPort) -WorkingDirectory $taskSiteRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskStateDir 'server.log') -RedirectStandardError (Join-Path $taskStateDir 'server-error.log')
+     $taskStarted = $false
+     for ($taskAttempt = 0; $taskAttempt -lt 20; $taskAttempt++) {
+         try {
+-            $taskResponse = Invoke-WebRequest -UseBasicParsing -Uri ('http://127.0.0.1:' + $taskPort + '/users.html') -TimeoutSec 2
+-            if ($taskResponse.StatusCode -eq 200 -and $taskResponse.Content.Contains('users/app.js')) { $taskStarted = $true; break }
++            $taskResponse = Invoke-WebRequest -UseBasicParsing -Uri ('http://127.0.0.1:' + $taskPort + '/index.html') -TimeoutSec 2
++            if ($taskResponse.StatusCode -eq 200 -and $taskResponse.Content.Contains('recipes/app.js') -and $taskResponse.Headers['X-Pssybreakers-Server'] -eq 'no-cache-v1') { $taskStarted = $true; break }
+         } catch { }
+         $taskServer.Refresh()
+         if ($taskServer.HasExited) { throw 'The server could not start. See the logs in the temporary pssybreakers folder.' }
+         Start-Sleep -Milliseconds 200
+     }
+     if (-not $taskStarted) { throw 'The server did not become ready.' }
+-    @{ processId = $taskServer.Id; startedAt = $taskServer.StartTime.ToUniversalTime().ToString('o'); root = $taskSiteRoot; port = $taskPort } | ConvertTo-Json | Set-Content -LiteralPath $taskStatePath -Encoding UTF8
++    @{ processId = $taskServer.Id; startedAt = $taskServer.StartTime.ToUniversalTime().ToString('o'); root = $taskSiteRoot; port = $taskPort; serverVersion = 'no-cache-v1' } | ConvertTo-Json | Set-Content -LiteralPath $taskStatePath -Encoding UTF8
+ }
+ 
+-$taskUrl = 'http://127.0.0.1:' + $taskPort + '/users.html'
++$taskUrl = 'http://127.0.0.1:' + $taskPort + '/index.html?v=' + [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + '#task5'
+ Write-Output $taskUrl
+ if (-not $NoBrowser) { Start-Process $taskUrl }
+diff --git a/tests/cart.test.mjs b/tests/cart.test.mjs
+deleted file mode 100644
+index 60f35fb0ec7e8c7be23575cd13d68942315fcc25..0000000000000000000000000000000000000000
+--- a/tests/cart.test.mjs
++++ /dev/null
+@@ -1,39 +0,0 @@
+-import test from 'node:test';
+-import assert from 'node:assert/strict';
+-import { createRecipeBasket, getRecipeChoices } from '../recipes/cart-store.js';
+-const dish = { id: 1, name: 'Pizza', image: 'https://example.com/pizza.jpg' };
+-const recipes = Array.from({length:12}, (_,i) => ({...dish,id:i+1,name:'Dish '+(i+1)}));
+-
+-test('profiles automatically receive 2–4 distinct dishes with quantities', () => {
+-  for (const id of [1,2,3,208,-1,-2]) {
+-    const items = createRecipeBasket(id,recipes);
+-    assert.ok(items.length >= 2 && items.length <= 4);
+-    assert.equal(new Set(items.map(item=>item.id)).size,items.length);
+-    assert.ok(items.every(item=>item.quantity >= 1 && item.quantity <= 2));
+-  }
+-  assert.notDeepEqual(createRecipeBasket(1,recipes),createRecipeBasket(2,recipes));
+-});
+-test('basket is stable after reopening, a new page and changes in API ordering', () => {
+-  const first = createRecipeBasket(1,recipes);
+-  assert.deepEqual(first,createRecipeBasket(1,[...recipes].reverse()));
+-  first[0].quantity = 80;
+-  assert.notEqual(createRecipeBasket(1,recipes)[0].quantity,80);
+-  assert.equal(recipes[0].quantity,undefined);
+-});
+-test('small, empty and malformed catalogs are safe, invalid owners rejected', () => {
+-  assert.deepEqual(createRecipeBasket(1,[]),[]);
+-  assert.equal(createRecipeBasket(1,[dish,dish,{id:-2},null]).length,1);
+-  for (const id of [0,1.5,'1']) assert.throws(()=>createRecipeBasket(id,recipes));
+-});
+-test('recipe catalog retries an HTTP error then caches its successful GET', async () => {
+-  const original = globalThis.fetch; let calls = 0;
+-  try {
+-    globalThis.fetch = async url => {
+-      calls++; assert.match(url, /recipes\?limit=0/);
+-      return calls === 1 ? Response.json({}, { status: 503 }) : Response.json({ recipes: [dish, { id: -1 }, { id: 2, name: '' }] });
+-    };
+-    await assert.rejects(getRecipeChoices(), /GET 503/);
+-    assert.deepEqual(await getRecipeChoices(), [dish]);
+-    await getRecipeChoices(); assert.equal(calls, 2);
+-  } finally { globalThis.fetch = original; }
+-});
+diff --git a/users.html b/users.html
+index f3e2329c3d2144c0ac0ab23a57ab19e41b5cff82..1207488d72da09d1da048d057af4083fb739164a 100644
+--- a/users.html
++++ b/users.html
+@@ -1,36 +1,2 @@
+-<!DOCTYPE html>
+-<html lang="ru">
+-<head>
+-  <meta charset="UTF-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="description" content="Каталог людей Pussybreakers: профили, поиск и управление пользователями DummyJSON.">
+-  <title>Люди — pussybreakers</title>
+-  <link rel="stylesheet" href="users/styles.css?v=20261016-buttons2">
+-  <link rel="stylesheet" href="recipes/cart.css?v=20261016-buttons2">
+-  <link rel="stylesheet" href="ui/common.css?v=20261016-buttons2">
+-  <script src="ui/boot.js?v=20261016-buttons2" data-entry="users/app.js" data-status="page-status" defer></script>
+-</head>
+-<body>
+-  <a class="skip-link" href="#main">Перейти к каталогу</a>
+-  <header class="site-header wrap">
+-    <div class="topline"><a class="brand" href="index.html"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>pussybreakers<span class="brand-dot">.</span></a><span class="edition">УЧЕБНЫЙ ПРОЕКТ / 2026</span></div>
+-    <nav class="site-nav" aria-label="Разделы сайта"><a href="index.html">Команда и задания</a><a href="index.html#task5">Рецепты</a><a href="users.html" aria-current="page">Люди <span>06</span></a></nav>
+-  </header>
+-  <main id="main" class="wrap">
+-    <section class="intro" aria-labelledby="page-title"><div><p class="eyebrow">Задание 06 / DummyJSON Users</p><h1 id="page-title">За каждым ником —<br><span>человек.</span></h1></div><div class="intro-side"><p>Знакомьтесь, находите и управляйте.<br>Все профили в одном месте.</p><button class="button primary" id="add-user" disabled aria-haspopup="dialog" aria-controls="create-dialog"><span aria-hidden="true">＋</span> Добавить человека</button></div></section>
+-    <section aria-label="Каталог людей">
+-      <div class="toolbar"><div class="search-field"><label for="user-search">Поиск по имени или нику</label><div class="input-with-icon"><span aria-hidden="true">⌕</span><input id="user-search" type="search" placeholder="Например, Emily или @emilys" autocomplete="off"></div></div><div class="control-field"><label for="role-filter">Роль</label><select id="role-filter"><option value="all">Все роли</option><option value="user">Пользователь</option><option value="moderator">Модератор</option><option value="admin">Админ</option></select></div><div class="control-field"><label for="name-sort">Сортировка по имени</label><select id="name-sort"><option value="asc">А → Я / A → Z</option><option value="desc">Я → А / Z → A</option></select></div></div>
+-      <div class="list-heading"><p id="user-count" role="status">Загружаем каталог…</p><span class="api-status" id="api-status" aria-live="polite">GET /users</span></div>
+-      <div class="status-row"><p id="page-status" class="status" role="status" aria-live="polite">Подключаемся к DummyJSON…</p><button id="retry-load" class="button secondary" hidden>Повторить загрузку</button></div>
+-      <div id="user-list" class="user-list" aria-busy="true"></div>
+-      <div id="empty-state" class="empty-state" hidden><span class="empty-symbol" aria-hidden="true">⌕</span><h2 id="empty-title">Никого не нашли</h2><p id="empty-text">Попробуйте другое имя или выберите все роли.</p><button id="reset-filters" class="button secondary">Сбросить поиск и фильтр</button></div>
+-      <p class="catalog-note">Учебные данные. Добавления, изменения и удаления действуют до перезагрузки страницы. Роль обозначает права пользователя, а не онлайн-статус.</p>
+-    </section>
+-    <noscript><p class="status" data-error="true">Для каталога нужно включить JavaScript.</p></noscript>
+-  </main>
+-  <footer class="wrap"><span>pussybreakers / Люди</span><a href="https://dummyjson.com/docs/users" target="_blank" rel="noreferrer">Данные DummyJSON ↗</a></footer>
+-  <dialog id="profile-dialog" class="dialog profile-dialog" aria-labelledby="profile-title"><button class="close-button" type="button" data-close aria-label="Закрыть профиль">×</button><div id="profile-container"></div></dialog>
+-  <dialog id="create-dialog" class="dialog form-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">Новый профиль</p><h2 id="create-title">Добавить человека</h2></div><button class="close-button" type="button" data-close aria-label="Закрыть форму добавления">×</button></div><div id="create-container"></div></dialog>
+-  <dialog id="edit-dialog" class="dialog form-dialog" aria-labelledby="edit-title"><div class="dialog-heading"><div><p class="eyebrow">Настройки профиля</p><h2 id="edit-title">Редактировать человека</h2></div><button class="close-button" type="button" data-close aria-label="Закрыть форму редактирования">×</button></div><div id="edit-container"></div></dialog>
+-</body>
+-</html>
++<!doctype html>
++<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=index.html#task5"><title>Переход к рецептам</title></head><body><p>Каталог людей закрыт. <a href="index.html#task5">Открыть рецепты</a></p></body></html>
+diff --git a/users/app.js b/users/app.js
+deleted file mode 100644
+index 651cc6fafb10b8a1cc58109b89e98b94a7d3e7f1..0000000000000000000000000000000000000000
+--- a/users/app.js
++++ /dev/null
+@@ -1,87 +0,0 @@
+-import { getUsers } from './api.js?v=20261016-buttons2';
+-import { matchesUser } from './model.js?v=20261016-buttons2';
+-import { renderList } from './list.js?v=20261016-buttons2';
+-import { initCreate } from './create.js?v=20261016-buttons2';
+-import { initEdit } from './edit.js?v=20261016-buttons2';
+-import { initDelete } from './delete.js?v=20261016-buttons2';
+-import { showProfile } from './details.js?v=20261016-buttons2';
+-
+-const search = document.getElementById('user-search');
+-const role = document.getElementById('role-filter');
+-const sort = document.getElementById('name-sort');
+-const add = document.getElementById('add-user');
+-const retry = document.getElementById('retry-load');
+-const returns = new WeakMap();
+-const app = {
+-  users: [], nextLocalId: -1, ready: false, busy: false, profileId: null,
+-  query: '', role: 'all', order: 'asc',
+-  render() { renderList(app); },
+-  isVisible(user) { return matchesUser(user, app.query, app.role); },
+-  setBusy(value) {
+-    app.busy = value;
+-    add.disabled = value || !app.ready; retry.disabled = value;
+-    document.querySelectorAll('dialog fieldset, dialog button').forEach(control => {
+-      if (!control.closest('.profile-basket')) control.disabled = value;
+-    });
+-    document.querySelectorAll('.profile-basket').forEach(basket => { basket.inert = value; });
+-    app.render();
+-  },
+-  showStatus(text, isError = false) {
+-    const status = document.getElementById('page-status'); status.textContent = text; status.dataset.error = isError;
+-    document.querySelectorAll('dialog[open] [data-form-status]').forEach(message => { message.textContent = text; message.dataset.error = isError; });
+-  },
+-  showLocalOperation() {
+-    const badge = document.getElementById('api-status'); badge.textContent = 'Локально · новый профиль'; badge.dataset.error = 'false';
+-  },
+-  focusList(id, action = 'profile') {
+-    const target = id === undefined ? document.querySelector('#user-list button:not(:disabled)') : document.querySelector(`#user-list [data-id="${id}"][data-action="${action}"]:not(:disabled)`);
+-    (target || search).focus();
+-  },
+-  openDialog(dialog, initialFocus, source = document.activeElement) {
+-    const current = document.querySelector('dialog[open]');
+-    if (current) { source = returns.get(current) || source; current.close(); }
+-    returns.set(dialog, source); dialog.showModal(); dialog.scrollTop = 0; initialFocus?.focus({ preventScroll: true });
+-  }
+-};
+-
+-// Все обработчики подключены до первого GET, без обратного импорта app.js.
+-initCreate(app); initEdit(app); initDelete(app);
+-for (const dialog of document.querySelectorAll('dialog')) {
+-  dialog.addEventListener('cancel', event => { if (app.busy) event.preventDefault(); });
+-  dialog.addEventListener('click', event => { if (event.target.closest('[data-close]') && !app.busy) dialog.close(); });
+-  dialog.addEventListener('close', () => {
+-    if (dialog.id === 'profile-dialog') app.profileId = null;
+-    requestAnimationFrame(() => {
+-      if (document.querySelector('dialog[open]')) return;
+-      const source = returns.get(dialog);
+-      if (source?.isConnected && !source.disabled) source.focus();
+-      else if (source?.dataset?.id) app.focusList(Number(source.dataset.id), source.dataset.action);
+-      else search.focus();
+-    });
+-  });
+-}
+-add.addEventListener('click', () => app.onCreate());
+-search.addEventListener('input', () => { app.query = search.value; app.render(); });
+-role.addEventListener('change', () => { app.role = role.value; app.render(); });
+-sort.addEventListener('change', () => { app.order = sort.value; app.render(); });
+-document.getElementById('reset-filters').addEventListener('click', () => { search.value = ''; role.value = 'all'; app.query = ''; app.role = 'all'; app.render(); search.focus(); });
+-document.addEventListener('users:request', ({ detail }) => {
+-  const badge = document.getElementById('api-status'); badge.textContent = `${detail.method} ${detail.path} · ${detail.status}`; badge.dataset.error = detail.isError;
+-});
+-async function load() {
+-  if (app.busy || app.ready) return;
+-  retry.hidden = true; app.setBusy(true); app.showStatus('Загружаем людей…');
+-  try { app.users = await getUsers(); app.ready = true; app.showStatus('Каталог загружен. Нажмите на карточку, чтобы открыть профиль.'); }
+-  catch (error) { app.showStatus(error.message, true); retry.hidden = false; }
+-  finally { app.setBusy(false); }
+-  if (app.ready) {
+-    const linkedId = new URLSearchParams(location.search).get('user');
+-    if (linkedId !== null) {
+-      const id = Number(linkedId);
+-      if (app.users.some(user => user.id === id)) showProfile(app, id, search);
+-      else app.showStatus('Профиль по этой ссылке не найден.', true);
+-    }
+-  }
+-}
+-retry.addEventListener('click', load);
+-load();
+diff --git a/users/create.js b/users/create.js
+deleted file mode 100644
+index 0f1917c96a890f6abbc88573344959407dcef038..0000000000000000000000000000000000000000
+--- a/users/create.js
++++ /dev/null
+@@ -1,27 +0,0 @@
+-import { createUser } from './api.js?v=20261016-buttons2';
+-import { buildForm, fillForm, readForm } from './form.js?v=20261016-buttons2';
+-export function initCreate(app) {
+-  const form = buildForm('create', 'Добавить человека');
+-  const dialog = document.getElementById('create-dialog');
+-  app.onCreate = function () {
+-    if (app.busy || !app.ready) return;
+-    fillForm(form);
+-    app.openDialog(dialog, form.elements.namedItem('firstName'));
+-  };
+-  form.addEventListener('submit', async event => {
+-    event.preventDefault();
+-    if (app.busy || !app.ready) return;
+-    const data = readForm(form, app);
+-    if (!data) return;
+-    app.setBusy(true);
+-    try {
+-      await createUser(data);
+-      // POST выдаёт один и тот же серверный ID. Для новых записей нужны свои ID.
+-      const user = { ...data, id: app.nextLocalId-- };
+-      app.users.push(user); app.render();
+-      fillForm(form); dialog.close();
+-      app.showStatus('Человек добавлен.' + (app.isVisible(user) ? '' : ' Текущий поиск или фильтр скрывает новый профиль.'));
+-    } catch (error) { app.showStatus(error.message, true); }
+-    finally { app.setBusy(false); }
+-  });
+-}
+diff --git a/users/delete.js b/users/delete.js
+deleted file mode 100644
+index e0d070fefb8400bb3b32cf4e5fb7e90da262cc9b..0000000000000000000000000000000000000000
+--- a/users/delete.js
++++ /dev/null
+@@ -1,32 +0,0 @@
+-import { deleteUser } from './api.js?v=20261016-buttons2';
+-import { fullName } from './model.js?v=20261016-buttons2';
+-import { confirmAction } from '../ui/confirm.js?v=20261016-buttons2';
+-export function initDelete(app) {
+-  let confirming = false;
+-  app.onDelete = async function (id) {
+-    if (app.busy || !app.ready || confirming) return;
+-    const user = app.users.find(item => item.id === id);
+-    if (!user) return;
+-    confirming = true;
+-    let accepted;
+-    try { accepted = await confirmAction({ message: `Удалить ${fullName(user)} (@${user.username})?` }); }
+-    finally { confirming = false; }
+-    if (!accepted || app.busy || !app.users.some(item => item.id === id)) return;
+-    app.setBusy(true);
+-    let deleted = false;
+-    try {
+-      if (id > 0) {
+-        const result = await deleteUser(id);
+-        if (result.isDeleted !== true) throw new Error('Сервер не подтвердил удаление. Человек остался в списке.');
+-      } else app.showLocalOperation();
+-      app.users = app.users.filter(item => item.id !== id); app.render();
+-      if (app.profileId === id) document.getElementById('profile-dialog').close();
+-      app.showStatus('Человек удалён.'); deleted = true;
+-    } catch (error) { app.showStatus(error.message, true); }
+-    finally {
+-      app.setBusy(false);
+-      if (deleted) requestAnimationFrame(() => app.focusList());
+-      else if (!document.querySelector('dialog[open]')) app.focusList(id, 'delete');
+-    }
+-  };
+-}
+diff --git a/users/details.js b/users/details.js
+deleted file mode 100644
+index beb503e76139250fac8754b71ce951724900f3d9..0000000000000000000000000000000000000000
+--- a/users/details.js
++++ /dev/null
+@@ -1,66 +0,0 @@
+-import { fullName, httpUrl, roleLabels } from './model.js?v=20261016-buttons2';
+-export function element(tag, className, text) {
+-  const node = document.createElement(tag);
+-  if (className) node.className = className;
+-  if (text !== undefined) node.textContent = text;
+-  return node;
+-}
+-export function avatar(user) {
+-  const box = element('span', 'avatar');
+-  box.setAttribute('aria-hidden', 'true');
+-  box.append(element('span', '', `${user.firstName[0] || ''}${user.lastName[0] || ''}`.toUpperCase() || '?'));
+-  if (httpUrl(user.image)) {
+-    const image = element('img');
+-    image.alt = ''; image.loading = 'lazy'; image.referrerPolicy = 'no-referrer';
+-    image.addEventListener('error', () => image.remove(), { once: true });
+-    image.src = user.image;
+-    box.append(image);
+-  }
+-  return box;
+-}
+-// Одна и та же разметка используется и в списке, и справа в профиле.
+-export function userCard(user) {
+-  const card = element('div', 'user-card');
+-  const info = element('span', 'user-info');
+-  info.append(element('span', 'user-name', fullName(user)), element('span', 'user-handle', '@' + user.username));
+-  const meta = element('span', 'user-meta');
+-  const role = element('span', 'role-badge', roleLabels[user.role]);
+-  role.dataset.role = user.role;
+-  meta.append(role, element('span', '', 'ID ' + user.id));
+-  info.append(meta); card.append(avatar(user), info);
+-  return card;
+-}
+-export function showProfile(app, id, source, { readOnly = false } = {}) {
+-  if (app.busy || !app.ready) return;
+-  const user = app.users.find(item => item.id === id);
+-  if (!user) return;
+-  const layout = element('div', 'profile-layout');
+-  const title = element('h2', '', fullName(user)); title.id = 'profile-title'; title.tabIndex = -1;
+-  const data = element('section', 'profile-data'); data.setAttribute('aria-label', 'Данные человека');
+-  data.append(element('p', 'eyebrow', 'Профиль человека'), title, userCard(user));
+-  const fields = element('dl', 'profile-fields');
+-  for (const [label, value] of [['ID', user.id], ['Имя', fullName(user)], ['Ник', '@' + user.username], ['Роль', roleLabels[user.role]], ['Почта', user.email || 'Не указана'], ['Телефон', user.phone || 'Не указан']]) {
+-    const row = element('div', 'profile-field'); row.append(element('dt', '', label), element('dd', '', String(value))); fields.append(row);
+-  }
+-  const actions = element('div', 'profile-actions');
+-  const edit = element('button', 'button primary', 'Редактировать'); edit.type = 'button'; edit.addEventListener('click', () => app.onEdit(id));
+-  const del = element('button', 'button danger', 'Удалить'); del.type = 'button'; del.addEventListener('click', () => app.onDelete(id));
+-  const status = element('p', 'form-status'); status.dataset.formStatus = ''; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+-  if (!readOnly) actions.append(edit, del);
+-  const basket = element('section', 'profile-basket');
+-  const basketTitle = element('h2', '', 'Корзина блюд'); basketTitle.id = 'basket-title'; basketTitle.tabIndex = -1;
+-  basket.append(basketTitle, element('p', 'basket-status', 'Загружаем корзину…'));
+-  data.append(fields, status, actions); layout.append(basket, data);
+-  document.getElementById('profile-container').replaceChildren(layout);
+-  app.profileId = id;
+-  app.openDialog(document.getElementById('profile-dialog'), layout.querySelector('#basket-title'), source);
+-  // Ошибка корзины не должна отключать каталог и его основные кнопки.
+-  import('../recipes/cart.js?v=20261016-buttons2').then(({ recipeBasket }) => {
+-    if (!basket.isConnected) return;
+-    const hadFocus = document.activeElement === basketTitle;
+-    const content = recipeBasket(user, app); basket.replaceWith(content);
+-    if (hadFocus) content.querySelector('#basket-title').focus({ preventScroll: true });
+-  }).catch(() => {
+-    basket.querySelector('.basket-status').textContent = 'Не удалось загрузить корзину. Перезагрузите страницу.';
+-  });
+-}
+diff --git a/users/edit.js b/users/edit.js
+deleted file mode 100644
+index 5c1a901daf17e63b00bb72ca36756fc380c9a0c3..0000000000000000000000000000000000000000
+--- a/users/edit.js
++++ /dev/null
+@@ -1,31 +0,0 @@
+-import { updateUser } from './api.js?v=20261016-buttons2';
+-import { buildForm, fillForm, readForm } from './form.js?v=20261016-buttons2';
+-export function initEdit(app) {
+-  const form = buildForm('edit', 'Сохранить изменения');
+-  const dialog = document.getElementById('edit-dialog');
+-  let editingId = null;
+-  app.onEdit = function (id) {
+-    if (app.busy || !app.ready) return;
+-    const user = app.users.find(item => item.id === id);
+-    if (!user) { app.showStatus('Этот человек уже удалён.', true); return; }
+-    editingId = id; fillForm(form, user);
+-    app.openDialog(dialog, form.elements.namedItem('firstName'));
+-  };
+-  form.addEventListener('submit', async event => {
+-    event.preventDefault();
+-    if (app.busy || !app.ready) return;
+-    const user = app.users.find(item => item.id === editingId);
+-    if (!user) { dialog.close(); app.showStatus('Этот человек уже удалён. Изменения не сохранены.', true); return; }
+-    const data = readForm(form, app, editingId);
+-    if (!data) return;
+-    app.setBusy(true);
+-    try {
+-      if (editingId > 0) await updateUser(editingId, data);
+-      else app.showLocalOperation();
+-      Object.assign(user, data); // data не содержит id: исходный ID сохраняется.
+-      app.render(); dialog.close();
+-      app.showStatus('Изменения сохранены.' + (app.isVisible(user) ? '' : ' Профиль скрыт текущим поиском или фильтром.'));
+-    } catch (error) { app.showStatus(error.message, true); }
+-    finally { app.setBusy(false); }
+-  });
+-}
+diff --git a/users/form.js b/users/form.js
+deleted file mode 100644
+index 03923bb4dcca1c25fca477d37392774f28b2af0d..0000000000000000000000000000000000000000
+--- a/users/form.js
++++ /dev/null
+@@ -1,55 +0,0 @@
+-import { editableFields, validateUser, roleLabels } from './model.js?v=20261016-buttons2';
+-import { element } from './details.js?v=20261016-buttons2';
+-export function buildForm(prefix, submitText) {
+-  const form = element('form', 'user-form'); form.id = prefix + '-form'; form.noValidate = true;
+-  const fieldset = element('fieldset'); fieldset.setAttribute('aria-label', 'Данные человека');
+-  fieldset.append(element('p', 'form-note', '* Обязательные поля. Ник должен быть уникальным.'));
+-  const grid = element('div', 'form-grid');
+-  const definitions = [
+-    ['firstName', 'Имя *', 'text', 60, 'Emily'], ['lastName', 'Фамилия *', 'text', 60, 'Johnson'],
+-    ['username', 'Ник *', 'text', 30, 'emilys'], ['role', 'Роль *', 'select'],
+-    ['email', 'Почта', 'email', null, 'name@example.com'], ['phone', 'Телефон', 'tel', 40, '+7 …'],
+-    ['image', 'Ссылка на фото', 'url', null, 'https://example.com/photo.jpg'], ['description', 'О человеке', 'textarea', 1000, 'Должность, компания или несколько слов о себе']
+-  ];
+-  for (const [key, title, type, max, placeholder] of definitions) {
+-    const group = element('div', ['image', 'description'].includes(key) ? 'wide' : '');
+-    const label = element('label', '', title); label.htmlFor = prefix + '-' + key;
+-    const input = element(type === 'select' ? 'select' : type === 'textarea' ? 'textarea' : 'input');
+-    if (input.tagName === 'INPUT') input.type = type;
+-    input.id = prefix + '-' + key; input.name = key;
+-    if (max) input.maxLength = max;
+-    if (placeholder) input.placeholder = placeholder;
+-    if (['firstName', 'lastName', 'username', 'role'].includes(key)) input.required = true;
+-    if (key === 'username') { input.minLength = 3; input.pattern = '[A-Za-z0-9_.\\-]{3,30}'; input.autocomplete = 'off'; input.spellcheck = false; }
+-    if (key === 'role') for (const [value, text] of Object.entries(roleLabels)) { const option = element('option', '', text); option.value = value; input.append(option); }
+-    group.append(label, input);
+-    if (key === 'username' || key === 'image') {
+-      const help = element('p', 'field-help', key === 'username' ? '3–30 символов: латиница, цифры, _ . - без @.' : 'Необязательно. Только http:// или https://.'); help.id = prefix + '-' + key + '-help'; input.setAttribute('aria-describedby', help.id); group.append(help);
+-    }
+-    input.addEventListener('input', () => input.setCustomValidity(''));
+-    input.addEventListener('change', () => input.setCustomValidity(''));
+-    grid.append(group);
+-  }
+-  const status = element('p', 'form-status'); status.dataset.formStatus = ''; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+-  const actions = element('div', 'form-actions');
+-  const cancel = element('button', 'button secondary', 'Отмена'); cancel.type = 'button'; cancel.dataset.close = '';
+-  const submit = element('button', 'button primary', submitText); submit.type = 'submit';
+-  actions.append(cancel, submit); fieldset.append(grid, status, actions); form.append(fieldset);
+-  document.getElementById(prefix + '-container').append(form);
+-  return form;
+-}
+-export function fillForm(form, user = {}) {
+-  form.reset();
+-  for (const key of editableFields) { const input = form.elements.namedItem(key); input.setCustomValidity(''); input.value = user[key] ?? (key === 'role' ? 'user' : ''); }
+-  form.querySelector('[data-form-status]').textContent = '';
+-}
+-export function readForm(form, app, id = null) {
+-  for (const key of editableFields) { const input = form.elements.namedItem(key); input.setCustomValidity(''); input.value = input.value.trim(); }
+-  if (!form.reportValidity()) return null;
+-  try { return validateUser(Object.fromEntries(new FormData(form)), app.users, id); }
+-  catch (error) {
+-    const input = form.elements.namedItem(error.field);
+-    if (input) { input.setCustomValidity(error.message); input.reportValidity(); input.focus(); }
+-    app.showStatus(error.message, true); return null;
+-  }
+-}
+diff --git a/users/list.js b/users/list.js
+deleted file mode 100644
+index 22f16aac314d570e23c7f847050dd5d25dc22999..0000000000000000000000000000000000000000
+--- a/users/list.js
++++ /dev/null
+@@ -1,32 +0,0 @@
+-import { element, userCard, showProfile } from './details.js?v=20261016-buttons2';
+-import { fullName, selectUsers } from './model.js?v=20261016-buttons2';
+-export function renderList(app) {
+-  const list = document.getElementById('user-list');
+-  list.setAttribute('aria-busy', String(app.busy));
+-  const selected = selectUsers(app.users, app.query, app.role, app.order);
+-  const fragment = document.createDocumentFragment();
+-  if (!app.ready && app.busy) {
+-    for (let i = 0; i < 6; i++) { const card = element('div', 'loading-card'); card.setAttribute('aria-hidden', 'true'); fragment.append(card); }
+-  } else for (const user of selected) {
+-    const tile = element('article', 'user-tile');
+-    const button = element('button'); button.type = 'button'; button.className = 'user-card';
+-    button.append(...userCard(user).childNodes);
+-    button.dataset.id = user.id; button.dataset.action = 'profile'; button.disabled = app.busy;
+-    button.setAttribute('aria-label', 'Открыть профиль: ' + fullName(user)); button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-controls', 'profile-dialog');
+-    button.addEventListener('click', () => showProfile(app, user.id, button));
+-    const actions = element('div', 'tile-actions');
+-    for (const [action, text, handler] of [['edit', 'Изменить', app.onEdit], ['delete', 'Удалить', app.onDelete]]) {
+-      const control = element('button', 'text-button ' + action, text); control.type = 'button'; control.dataset.id = user.id; control.dataset.action = action;
+-      control.setAttribute('aria-label', text + ': ' + fullName(user)); control.disabled = app.busy;
+-      control.addEventListener('click', () => handler(user.id)); actions.append(control);
+-    }
+-    const arrow = element('span', 'arrow', '↗'); arrow.setAttribute('aria-hidden', 'true'); actions.append(arrow);
+-    tile.append(button, actions); fragment.append(tile);
+-  }
+-  list.replaceChildren(fragment);
+-  document.getElementById('user-count').textContent = app.ready ? `Показано ${selected.length} из ${app.users.length}` : app.busy ? 'Загружаем каталог…' : 'Каталог не загружен';
+-  document.getElementById('empty-state').hidden = !app.ready || selected.length > 0;
+-  document.getElementById('empty-title').textContent = app.users.length ? 'Никого не нашли' : 'Каталог пока пуст';
+-  document.getElementById('empty-text').textContent = app.users.length ? 'Попробуйте другое имя или выберите все роли.' : 'Добавьте первого человека с помощью кнопки выше.';
+-  document.getElementById('reset-filters').hidden = !app.query && app.role === 'all';
+-}
+diff --git a/users/styles.css b/users/styles.css
+deleted file mode 100644
+index 9432ebc6ed77d6004a11cff7c73cee76ff3a7aa6..0000000000000000000000000000000000000000
+--- a/users/styles.css
++++ /dev/null
+@@ -1,2 +0,0 @@
+-:root{color-scheme:dark;--bg:#101213;--surface:#1b1e20;--line:#33373a;--text:#f4f5f1;--muted:#a9afb3;--lime:#c3f85c;--error:#ffb4aa}
+-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--lime);outline-offset:4px}[hidden]{display:none!important}.wrap{max-width:1344px;margin:auto;padding-left:60px;padding-right:60px}.site-header{padding-top:30px}.topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.brand{display:flex;gap:12px;align-items:center;font-weight:800;font-size:22px;letter-spacing:-.8px}.brand-dot{color:var(--lime);margin-left:-12px}.mark{display:grid;grid-template-columns:repeat(2,7px);gap:4px;transform:rotate(-8deg)}.mark i{width:7px;height:7px;background:var(--lime)}.edition{font-size:11px;letter-spacing:1.7px;color:var(--muted)}.site-nav{display:flex;gap:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.site-nav a{padding:18px 0;color:var(--muted);font-size:14px;position:relative}.site-nav a:hover{color:var(--text)}.site-nav a[aria-current]{color:var(--lime)}.site-nav a[aria-current]:after{content:'';position:absolute;bottom:-1px;height:3px;background:var(--lime);left:0;right:0}.site-nav a span{font-size:10px;margin-left:7px}.intro{display:flex;justify-content:space-between;gap:35px;align-items:flex-end;padding:54px 0 40px}.eyebrow{text-transform:uppercase;letter-spacing:1.8px;color:var(--lime);font-size:11px;margin:0 0 17px}h1{font-size:clamp(38px,4.5vw,62px);line-height:1.09;letter-spacing:-2.3px;margin:0}h1 span{color:var(--lime)}.intro-side{padding-bottom:3px}.intro-side p{color:var(--muted);font-size:15px;margin:0 0 23px;line-height:1.7}.button{border:1px solid var(--line);border-radius:8px;padding:11px 17px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px}.primary{background:var(--lime);color:#101213;border-color:var(--lime)}.primary:hover{background:#d4ff86}.secondary{background:var(--surface);color:var(--text)}.secondary:hover{border-color:var(--muted)}.danger{background:transparent;color:var(--error)}.danger:hover{border-color:var(--error)}.toolbar{display:grid;grid-template-columns:minmax(0,1fr) 200px 215px;gap:16px;border:1px solid var(--line);border-radius:12px;padding:19px;background:#16191a}.toolbar label,.user-form label{display:block;color:var(--muted);font-size:12px;margin:0 0 8px}.input-with-icon{position:relative}.input-with-icon>span{position:absolute;left:14px;top:4px;font-size:27px;color:var(--muted)}input,select,textarea{width:100%;background:var(--bg);border:1px solid #454b4e;color:var(--text);border-radius:7px;min-height:44px;padding:10px 12px;font-size:14px;min-width:0}input::placeholder,textarea::placeholder{color:#8d9497}input[type=search]{padding-left:42px}select{padding-right:25px}textarea{resize:vertical;min-height:96px}.list-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:26px 0 0}.list-heading p{font-size:13px;color:var(--muted);margin:0}.api-status{font:11px/1.5 Consolas,monospace;color:var(--lime);border:1px solid #3b482d;background:#1b2416;padding:5px 9px;border-radius:5px}.api-status[data-error=true]{color:var(--error);border-color:#6f3d37;background:#2d1c1b}.status-row{display:flex;align-items:center;gap:16px}.status{color:var(--muted);font-size:13px;margin:10px 0 18px;overflow-wrap:anywhere;min-height:20px}.status[data-error=true]{color:var(--error)}.status-row .button{margin-bottom:16px}.user-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;min-height:80px}.user-tile{border:1px solid var(--line);background:var(--surface);border-radius:12px;overflow:hidden;transition:border-color .15s,transform .15s;min-width:0}.user-tile:hover{border-color:#66754f;transform:translateY(-2px)}.user-card{width:100%;min-width:0;min-height:132px;padding:22px 19px;display:flex;align-items:center;gap:16px;text-align:left;border:0;background:transparent;color:var(--text);font:inherit}.user-card:focus-visible{outline-offset:-4px}.avatar{width:76px;height:76px;flex:none;display:grid;place-items:center;border-radius:12px;background:#283026;color:var(--lime);font-size:24px;font-weight:700;overflow:hidden;position:relative}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#283026}.user-info{min-width:0;flex:1;display:flex;flex-direction:column}.user-name{font-size:17px;line-height:1.3;font-weight:700;overflow-wrap:anywhere}.user-handle{font-size:13px;color:var(--muted);margin-top:5px;overflow-wrap:anywhere}.user-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px;font-size:10px;color:var(--muted)}.role-badge{border-radius:4px;padding:2px 6px;background:#292e31;color:#c9cfd2;font-size:10px}.role-badge[data-role=admin]{color:var(--lime);background:#2d3920}.role-badge[data-role=moderator]{color:#c2bbff;background:#322f47}.tile-actions{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:7px 15px;gap:8px}.text-button{background:none;border:0;color:var(--muted);padding:6px 4px;font-size:12px;min-height:32px}.text-button:hover{color:var(--lime)}.text-button.delete:hover{color:var(--error)}.tile-actions .arrow{color:var(--lime);font-size:15px;margin-left:auto}.empty-state{text-align:center;padding:60px 20px;border:1px dashed var(--line);border-radius:12px}.empty-symbol{font-size:40px;color:var(--lime)}h2{font-size:25px;letter-spacing:-.6px;line-height:1.25;margin:0 0 14px}.empty-state p{color:var(--muted)}.catalog-note{font-size:12px;color:var(--muted);max-width:800px;margin:28px 0 48px;line-height:1.7}footer{border-top:1px solid var(--line);display:flex;justify-content:space-between;padding-top:24px;padding-bottom:28px;color:var(--muted);font-size:12px}footer a:hover{color:var(--lime)}.skip-link{position:fixed;left:20px;top:-100px;z-index:10;background:var(--lime);color:#101213;padding:12px}.skip-link:focus{top:10px}.dialog{position:fixed;inset:0;margin:auto;border:1px solid #454b4e;border-radius:18px;color:var(--text);background:var(--surface);max-height:90vh;max-height:90dvh;overflow:auto;overscroll-behavior:contain;padding:28px;box-shadow:0 30px 100px #0009}.dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}body:has(dialog[open]){overflow:hidden}.form-dialog{width:calc(100% - 32px);max-width:650px}.dialog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.dialog-heading .eyebrow{margin-bottom:9px}.dialog-heading h2{margin-bottom:24px}.close-button{background:var(--bg);border:1px solid var(--line);border-radius:50%;width:38px;height:38px;flex:none;color:var(--text);font-size:25px;display:grid;place-items:center;line-height:1;cursor:pointer}.close-button:hover{color:var(--lime);border-color:var(--lime)}.user-form fieldset{border:0;padding:0;margin:0;min-width:0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.form-grid .wide{grid-column:1/-1}.field-help,.form-note{font-size:11px;color:var(--muted);margin:7px 0 0}.form-note{margin:0 0 20px}.form-actions{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line);padding-top:18px}.form-status:empty{display:none}.form-status{color:var(--error);margin:18px 0;font-size:13px;overflow-wrap:anywhere}.profile-dialog{width:calc(100% - 32px);max-width:940px;padding:0}.profile-dialog>.close-button{position:absolute;right:18px;top:18px;z-index:1}.profile-layout{display:grid;grid-template-columns:.9fr 1.1fr;min-height:520px}.profile-summary{padding:46px 34px;background:linear-gradient(145deg,#252e20,#171b18);border-right:1px solid var(--line)}.profile-summary .avatar{width:154px;height:154px;font-size:48px;border-radius:22px;margin:28px 0}.profile-summary h2{font-size:32px;overflow-wrap:anywhere;margin:0 0 9px}.profile-summary .profile-username{color:var(--lime);font-size:14px;overflow-wrap:anywhere}.profile-description{color:#b6bfb2;font-size:14px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}.profile-data{padding:65px 30px 28px;min-width:0}.profile-data>.user-card{border:1px solid var(--line);background:var(--bg);border-radius:10px;max-width:380px;margin-bottom:25px}.profile-fields{margin:0}.profile-field{display:grid;grid-template-columns:85px minmax(0,1fr);gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.profile-field dt{color:var(--muted)}.profile-field dd{margin:0;overflow-wrap:anywhere}.profile-actions{display:flex;gap:9px;margin-top:23px;flex-wrap:wrap}.loading-card{height:179px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(100deg,#1b1e20,#242a25,#1b1e20);background-size:200%;animation:pulse 1.5s infinite}.skeleton-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@keyframes pulse{to{background-position:-200%}}@media(min-width:1500px){.intro{padding-top:65px}}@media(max-width:1050px){.wrap{padding-left:32px;padding-right:32px}.user-list{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar{grid-template-columns:minmax(0,1fr) 155px 185px}.intro{gap:20px}.intro-side{max-width:235px}}@media(max-width:700px){.wrap{padding-left:20px;padding-right:20px}.site-header{padding-top:23px}.edition{display:none}.site-nav{gap:22px}.site-nav a{font-size:12px}.intro{display:block;padding:35px 0 28px}h1{font-size:40px;letter-spacing:-1.6px}.intro-side{max-width:none;display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:22px}.intro-side p{font-size:13px;margin:0}.intro-side .button{width:100%}.toolbar{grid-template-columns:1fr 1fr;padding:14px;gap:14px}.search-field{grid-column:1/-1}.toolbar label{font-size:11px}.toolbar select{font-size:12px}.user-list{grid-template-columns:1fr;gap:13px}.user-card{padding:22px 20px}.profile-layout{grid-template-columns:1fr}.profile-summary{padding:26px;border-right:0;border-bottom:1px solid var(--line)}.profile-summary .avatar{width:110px;height:110px;margin:20px 0}.profile-summary h2{font-size:28px}.profile-data{padding:25px}.profile-data>.user-card{max-width:none}.dialog{width:calc(100% - 20px);max-height:94dvh;border-radius:14px}.form-dialog{padding:24px 18px}.form-grid{gap:15px}.form-grid>div{grid-column:1/-1}.profile-field{grid-template-columns:70px minmax(0,1fr)}footer{gap:20px;font-size:11px}.list-heading{gap:10px}.api-status{font-size:10px}.catalog-note{margin-bottom:32px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+diff --git "a/\320\232\320\220\320\232-\320\227\320\220\320\237\320\243\320\241\320\242\320\230\320\242\320\254.txt" "b/\320\232\320\220\320\232-\320\227\320\220\320\237\320\243\320\241\320\242\320\230\320\242\320\254.txt"
+index 7e2bc7337ed1a6a10432fae16339b2b80dad36d9..dc9263d35d3518c0c8a84f4ed3b43be88b3e7ace 100644
+--- "a/\320\232\320\220\320\232-\320\227\320\220\320\237\320\243\320\241\320\242\320\230\320\242\320\254.txt"
++++ "b/\320\232\320\220\320\232-\320\227\320\220\320\237\320\243\320\241\320\242\320\230\320\242\320\254.txt"
+@@ -1,54 +1,20 @@
+-PUSSYBREAKERS — ЗАДАНИЕ 6: КАТАЛОГ ЛЮДЕЙ
++PUSSYBREAKERS — РЕЦЕПТЫ И АВТОРЫ
+ 
+-АВТОМАТИЧЕСКИЙ ЗАПУСК НА ЭТОМ КОМПЬЮТЕРЕ
+-Сайт уже запущен: http://127.0.0.1:8000/users.html
+-Чтобы запустить его снова после перезагрузки компьютера, открой START-SITE.cmd в папке pssybreakers-task6.
+-Он сам поднимает сервер в фоне и открывает сайт. Повторный запуск использует уже работающий сервер.
+-Ничего устанавливать на этом компьютере не нужно: используется имеющийся Python из Codex.
++1. Открой START-SITE.cmd из этой папки. Он откроет новую ссылку без старого кэша; используй открывшуюся вкладку.
++2. На странице рецептов нажми «Загрузить рецепты».
++3. Найди блюдо через поиск, кухню или сложность. В поле «Сортировка» выбери порядок по названию, времени или рейтингу.
++4. Открой рецепт и нажми на его автора.
++5. Слева в профиле находятся блюда автора, поиск, категория и своя сортировка. Справа — информация о пользователе. На любое блюдо можно нажать.
+ 
+-ПЕРЕНОС НА ДРУГОЙ КОМПЬЮТЕР ИЛИ В РЕПОЗИТОРИЙ
++Отдельное задание 6 и управление пользователями убраны. Корзина заменена рецептами автора.
++Старая ссылка users.html перенаправляет в рецепты.
+ 
+-1. Распакуй pssybreakers-task6.zip.
+-2. Для обновления своего репозитория скопируй из архива в его корень:
+-   index.html, users.html, users/, recipes/, ui/, tests/, README.md, package.json.
+-   С заменой существующих index.html и README.md.
+-3. Открой папку проекта в VS Code и запусти users.html через Live Server.
+-   Либо в терминале из папки сайта выполни:
+-   python -m http.server 8000
+-   Затем открой http://localhost:8000/users.html
++Для команды: скачать весь проект, открыть папку в VS Code, нажать правой кнопкой на index.html → Open with Live Server.
++Если такого пункта нет, установить расширение Live Server.
++На этом компьютере можно просто запускать START-SITE.cmd. На другом компьютере для него нужен Python 3.
+ 
+-Новое задание открывается также по ссылке «Задание 6 · Люди» в шапке главной страницы.
+-Нужен интернет. Не открывай users.html обычным двойным щелчком: JS-модулям нужен HTTP-сервер.
+-Если команда python не найдена, попробуй py (Windows) или python3 (Linux/macOS), либо используй Live Server.
+-
+-Добавлено: каталог, поиск, сортировки, фильтр ролей, профиль, создание, редактирование, удаление, проверка данных и HTTP-коды.
+-Старые задания и функции рецептов сохранены. В рецепты добавлен раздел учебных отзывов.
+-На карточке блюда нажми «Отзывы», затем имя или аватар автора: откроется его профиль.
+-«Вернуться к рецепту» закрывает профиль; «Открыть в каталоге людей» открывает этого же автора на users.html.
+-Тексты примеров придуманы для задания и помечены учебными: DummyJSON Recipes не возвращает тексты отзывов.
+-Можно добавить свой учебный отзыв с выбором тестового автора; он сохраняется до перезагрузки страницы.
+-Слева в профиле автоматически появляется заполненная корзина из 2–4 блюд с фото и количеством порций, справа — данные человека.
+-Ничего добавлять вручную не нужно. У разных людей разные учебные наборы блюд.
+-Корзина — учебный пример. Один профиль получает тот же набор после повторного открытия, перезагрузки и перехода между страницами.
+-Имена и распределение работы из задания друга не переносились.
+-
+-DummyJSON не сохраняет изменения на сервере: перезагрузка возвращает исходный каталог.
+-Для публикации на GitHub Pages нужно загрузить ВСЕ файлы из архива, включая папки users/, recipes/ и ui/.
+-В удалённый GitHub-репозиторий эта версия автоматически не отправлена.
+-
+-Проверки: 25 встроенных тестов API/данных/отзывов/корзин и 20 дополнительных тестов форм/CRUD/профилей/кнопок прошли.
+-В браузере проверены загрузка 208 пользователей, поиск, роли, сортировки, профиль, Enter/Escape и фокус,
+-реальный POST, редактирование нового пользователя, мобильный профиль и форма, старые рецепты,
+-отзывы, переход к автору, возврат к блюду, добавление отзыва и прямая ссылка на профиль в каталоге.
+-Корзина проверена в профиле автора и каталоге: автоматическая загрузка блюд и количества, повторное открытие,
+-раздельные корзины людей и мобильная ширина без горизонтальной прокрутки. Ошибок в консоли нет.
+-Подтверждение удаления теперь внутри сайта и проверено в браузере: создание и удаление рецепта и человека работают.
+-
+-Встроенные тесты запускаются без установки пакетов (Node.js 22.7+):
+-node --test tests/*.test.mjs
+-
+-
+-
+-
+-Исправлен запуск заданий 5 и 6: единая версия файлов, сообщение при ошибке загрузки модулей и таймаут запросов рецептов. В старой вкладке обнови страницу Ctrl+F5.
++Не открывай index.html обычным двойным щелчком — задания с JS-модулями требуют локального сервера.
++Если в открытой вкладке остался старый вариант сайта, нажми Ctrl+F5.
+ 
++Нужен интернет. DummyJSON не сохраняет изменения: новые рецепты и отзывы действуют до перезагрузки страницы.
++Для отправки команде сделай commit и push всех изменений, затем ребята выполняют git pull.
