@@ -1,0 +1,159 @@
+diff --git a/recipes/filters.js b/recipes/filters.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..8ab664cef9e54b3a876b978c83ee8beb54de68ec
+--- /dev/null
++++ b/recipes/filters.js
+@@ -0,0 +1,94 @@
++function nonNegativeNumber(value) {
++  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : null;
++}
++export const recipeRating = recipe => nonNegativeNumber(recipe.rating);
++function recipeMinutes(recipe) {
++  const prep = nonNegativeNumber(recipe.prepTimeMinutes);
++  const cook = nonNegativeNumber(recipe.cookTimeMinutes);
++  return prep === null && cook === null ? null : (prep || 0) + (cook || 0);
++}
++const sortOptions = [
++  ['', 'По умолчанию'],
++  ['name-asc', 'Название: А → Я / A → Z'],
++  ['name-desc', 'Название: Я → А / Z → A'],
++  ['time-asc', 'Сначала быстрые'],
++  ['time-desc', 'Сначала долгие'],
++  ['rating-desc', 'Сначала высокий рейтинг'],
++  ['rating-asc', 'Сначала низкий рейтинг']
++];
++
++export function selectRecipes(recipes, { query = '', cuisine = '', difficulty = '', category = '', sort = '' } = {}, authorId) {
++  const words = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
++  const visible = recipes.filter(recipe => {
++    const text = [recipe.name, ...(recipe.ingredients || [])].join(' ').toLocaleLowerCase();
++    return (authorId === undefined || (recipe.userId != null && Number(recipe.userId) === Number(authorId)))
++      && (!cuisine || recipe.cuisine === cuisine)
++      && (!difficulty || recipe.difficulty === difficulty)
++      && (!category || (recipe.mealType || []).includes(category))
++      && words.every(word => text.includes(word));
++  });
++  if (!sort || !sortOptions.some(([value]) => value === sort)) return visible;
++  const [field, order] = sort.split('-');
++  const direction = order === 'desc' ? -1 : 1;
++  return visible.sort((a, b) => {
++    if (field === 'name') return direction * String(a.name || '').localeCompare(String(b.name || ''), ['ru', 'en'], { sensitivity: 'base', numeric: true });
++    const left = field === 'time' ? recipeMinutes(a) : recipeRating(a);
++    const right = field === 'time' ? recipeMinutes(b) : recipeRating(b);
++    // Неизвестное время или рейтинг всегда идут после заполненных значений.
++    if (left === null) return right === null ? 0 : 1;
++    if (right === null) return -1;
++    return direction * (left - right);
++  });
++}
++
++export const difficultyLabels = { Easy: 'Легко', Medium: 'Средне', Hard: 'Сложно' };
++export const categoryLabels = { Breakfast: 'Завтрак', Lunch: 'Обед', Dinner: 'Ужин', Dessert: 'Десерт', Snack: 'Перекус', Snacks: 'Перекусы', Beverage: 'Напиток', Appetizer: 'Закуска', 'Side Dish': 'Гарнир' };
++
++// Каждый экземпляр хранит свои значения: фильтр профиля не меняет общий каталог.
++export function createRecipeFilters(container, prefix, onChange, { categories = false } = {}) {
++  container.className = 'recipe-filters';
++  container.setAttribute('role', 'search');
++  container.setAttribute('aria-label', prefix === 'author' ? 'Фильтр рецептов автора' : 'Фильтр рецептов');
++  const controls = {};
++  const fields = [['query', 'Название или ингредиент', 'input'], ...(categories
++    ? [['category', 'Категория', 'select']]
++    : [['cuisine', 'Кухня', 'select'], ['difficulty', 'Сложность', 'select']]), ['sort', 'Сортировка', 'select']];
++  for (const [key, caption, tag] of fields) {
++    const label = document.createElement('label');
++    label.className = 'recipe-filter-' + key;
++    label.textContent = caption;
++    const input = document.createElement(tag);
++    input.id = prefix + '-' + key;
++    if (tag === 'input') { input.type = 'search'; input.placeholder = 'Например, pizza или chicken'; }
++    label.append(input); container.append(label); controls[key] = input;
++    input.addEventListener(tag === 'input' ? 'input' : 'change', onChange);
++  }
++  for (const [value, caption] of sortOptions) {
++    const option = document.createElement('option'); option.value = value; option.textContent = caption;
++    controls.sort.append(option);
++  }
++  const reset = document.createElement('button');
++  reset.type = 'button'; reset.className = 'recipe-secondary'; reset.textContent = 'Сбросить';
++  reset.addEventListener('click', () => { Object.values(controls).forEach(input => { input.value = ''; }); onChange(); controls.query.focus(); });
++  container.append(reset);
++  function options(key, values, caption, labels = {}) {
++    const input = controls[key];
++    const selected = input.value;
++    input.replaceChildren();
++    for (const value of ['', ...new Set(values.filter(Boolean).sort())]) {
++      const option = document.createElement('option');
++      option.value = value; option.textContent = value ? labels[value] || value : caption; input.append(option);
++    }
++    input.value = [...input.options].some(option => option.value === selected) ? selected : '';
++  }
++  return {
++    values: () => Object.fromEntries(Object.entries(controls).map(([key, input]) => [key, input.value])),
++    update(recipes) {
++      if (categories) options('category', recipes.flatMap(recipe => recipe.mealType || []), 'Все категории', categoryLabels);
++      else {
++        options('cuisine', recipes.map(recipe => recipe.cuisine), 'Любая кухня');
++        options('difficulty', recipes.map(recipe => recipe.difficulty), 'Любая сложность', difficultyLabels);
++      }
++    }
++  };
++}
+diff --git a/tests/recipes.test.mjs b/tests/recipes.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..074faeaadcb9e89b2e24e0a861a6e3ec4ba2ed9f
+--- /dev/null
++++ b/tests/recipes.test.mjs
+@@ -0,0 +1,53 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { selectRecipes } from '../recipes/filters.js';
++const recipes = [
++  { id: 1, userId: 45, name: 'Classic Pizza', ingredients: ['Tomato', 'Cheese'], cuisine: 'Italian', difficulty: 'Easy' },
++  { id: 2, userId: 9, name: 'Chicken Soup', ingredients: ['Chicken'], cuisine: 'Asian', difficulty: 'Easy' },
++  { id: 31, userId: 45, name: 'Tomato Soup', ingredients: ['Tomato', 'Cream'], cuisine: 'French', difficulty: 'Medium' },
++  { id: 100000, userId: 0, name: 'Свой рецепт', ingredients: ['Рис'] },
++  { id: 100001, name: 'Без автора' }
++];
++test('author list uses userId and includes recipes outside the first page', () => {
++  assert.deepEqual(selectRecipes(recipes, {}, 45).map(item => item.id), [1, 31]);
++  assert.deepEqual(selectRecipes(recipes, {}, 0).map(item => item.id), [100000]);
++  assert.deepEqual(selectRecipes(recipes, {}, 404), []);
++});
++test('search combines words from title and ingredients without case sensitivity', () => {
++  assert.deepEqual(selectRecipes(recipes, { query: '  PIZZA tomato  ' }).map(item => item.id), [1]);
++  assert.deepEqual(selectRecipes(recipes, { query: 'рис' }).map(item => item.id), [100000]);
++});
++test('cuisine and difficulty combine with search and author restrictions', () => {
++  assert.deepEqual(selectRecipes(recipes, { query: 'tomato', cuisine: 'French', difficulty: 'Medium' }, 45).map(item => item.id), [31]);
++  assert.deepEqual(selectRecipes(recipes, { cuisine: 'Asian' }, 45), []);
++});
++test('filtering never modifies the catalog; resetting returns all recipes', () => {
++  const before = JSON.stringify(recipes);
++  selectRecipes(recipes, { query: 'not found' });
++  assert.equal(JSON.stringify(recipes), before);
++  assert.deepEqual(selectRecipes(recipes), recipes);
++});
++
++const sortable = [
++  { id: 1, userId: 45, name: 'B dish', prepTimeMinutes: 30, cookTimeMinutes: 15, rating: 4.5, mealType: ['Dinner'] },
++  { id: 2, userId: 9, name: 'A dish', prepTimeMinutes: 10, cookTimeMinutes: 5, rating: 4.9 },
++  { id: 3, userId: 45, name: 'C dish', prepTimeMinutes: 5, cookTimeMinutes: 5, rating: 4.5, mealType: ['Dinner'] },
++  { id: 4, userId: 45, name: 'D dish' }
++];
++const sortedIds = sort => selectRecipes(sortable, { sort }).map(recipe => recipe.id);
++test('name and total cooking time sort in both directions without modifying source order', () => {
++  assert.deepEqual(sortedIds('name-asc'), [2, 1, 3, 4]);
++  assert.deepEqual(sortedIds('name-desc'), [4, 3, 1, 2]);
++  assert.deepEqual(sortedIds('time-asc'), [3, 2, 1, 4]);
++  assert.deepEqual(sortedIds('time-desc'), [1, 2, 3, 4]);
++  assert.deepEqual(sortedIds(''), [1, 2, 3, 4]);
++});
++test('rating sorting preserves equal-rating order and puts missing ratings last in both directions', () => {
++  assert.deepEqual(sortedIds('rating-desc'), [2, 1, 3, 4]);
++  assert.deepEqual(sortedIds('rating-asc'), [1, 3, 2, 4]);
++  assert.deepEqual(selectRecipes([{id:1,rating:null},{id:2,rating:0},{id:3,rating:''},{id:4,rating:'wrong'}], {sort:'rating-asc'}).map(item => item.id), [2,1,3,4]);
++});
++test('sorting applies after author, category and search filtering', () => {
++  assert.deepEqual(selectRecipes(sortable, { query: 'dish', category: 'Dinner', sort: 'time-asc' }, 45).map(item => item.id), [3, 1]);
++  assert.deepEqual(sortedIds('unsupported'), [1, 2, 3, 4]);
++});
